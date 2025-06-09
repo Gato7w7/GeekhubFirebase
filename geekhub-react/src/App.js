@@ -1,11 +1,33 @@
 // src/App.js
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuthContext } from './context/AuthContext';
 import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { db } from './services/firebase';
 import LoginPage from './pages/LoginPage';
 import PrivateRoute from './components/auth/PrivateRoute';
+import Home from './pages/Home';
+
+// Componente para manejar la redirección de la ruta raíz
+const RootRedirect = () => {
+  const { user, loading } = useAuthContext();
+
+  if (loading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh' 
+      }}>
+        <p>Verificando autenticación...</p>
+      </div>
+    );
+  }
+
+  // SIEMPRE empezar en login, el usuario irá a home después de autenticarse
+  return <Navigate to="/login" replace />;
+};
 
 // Páginas y componentes
 const FirebaseTest = () => {
@@ -103,50 +125,29 @@ const FirebaseTest = () => {
   );
 };
 
-const HomePage = () => {
-  const { user, loading, setUser } = useAuthContext();
-  const navigate = useNavigate();
-
-  if (loading) return <p>Cargando...</p>;
-  if (!user) return <Navigate to="/login" />;
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
-    navigate('/login');
-  };
-
-  return (
-    <div style={{ padding: '20px', textAlign: 'center' }}>
-      <h1>🏠 Página Principal</h1>
-      <p>Bienvenido, {user.email}</p>
-      <button onClick={() => window.location.href = '/test'}>
-        Probar Firebase
-      </button>
-      <br />
-      <button onClick={handleLogout} style={{ marginTop: '20px' }}>
-        Cerrar sesión
-      </button>
-    </div>
-  );
-};
-
 function App() {
   return (
     <AuthProvider>
       <Router>
         <div className="App">
           <Routes>
-            <Route path="/" element={<Navigate to="/test" />} />
+            {/* Ruta raíz que redirige según el estado de autenticación */}
+            <Route path="/" element={<RootRedirect />} />
+            
+            {/* Ruta de login */}
             <Route path="/login" element={<LoginPage />} />
+            
+            {/* Ruta protegida de home */}
             <Route
               path="/home"
               element={
                 <PrivateRoute>
-                  <HomePage />
+                  <Home />
                 </PrivateRoute>
               }
             />
+            
+            {/* Ruta de test (puedes protegerla también si quieres) */}
             <Route path="/test" element={<FirebaseTest />} />
           </Routes>
         </div>
