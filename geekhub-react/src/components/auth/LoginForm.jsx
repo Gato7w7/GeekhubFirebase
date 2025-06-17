@@ -1,7 +1,9 @@
+// src/components/auth/LoginForm.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../services/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../../services/firebase';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -16,12 +18,26 @@ const LoginForm = () => {
     setLoading(true);
     
     try {
-      // Firebase Auth se encarga de todo automáticamente
-      await signInWithEmailAndPassword(auth, email, password);
+      // Autenticar con Firebase
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
       
-      // El AuthContext se actualizará automáticamente gracias a onAuthStateChanged
-      // y PrivateRoute permitirá el acceso a /home
-      navigate('/home');
+      // Obtener el rol del usuario desde Firestore
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      let userRole = 'user'; // Rol por defecto
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        userRole = userData.role || 'user';
+      }
+      
+      // Redirigir según el rol
+      if (userRole === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/home');
+      }
+      
     } catch (err) {
       console.error('Error en login:', err);
       setError('Credenciales inválidas o error en el login');

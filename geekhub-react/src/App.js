@@ -6,11 +6,13 @@ import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { db } from './services/firebase';
 import LoginPage from './pages/LoginPage';
 import PrivateRoute from './components/auth/PrivateRoute';
+import AdminRoute from './components/auth/AdminRoute';
 import Home from './pages/Home';
+import AdminDashboard from './pages/AdminDashboard';
 
 // Componente para manejar la redirección de la ruta raíz
 const RootRedirect = () => {
-  const { user, loading } = useAuthContext();
+  const { user, userRole, loading } = useAuthContext();
 
   if (loading) {
     return (
@@ -25,7 +27,16 @@ const RootRedirect = () => {
     );
   }
 
-  // SIEMPRE empezar en login, el usuario irá a home después de autenticarse
+  // Si está autenticado, redirigir según el rol
+  if (user) {
+    if (userRole === 'admin') {
+      return <Navigate to="/admin" replace />;
+    } else {
+      return <Navigate to="/home" replace />;
+    }
+  }
+
+  // Si no está autenticado, ir a login
   return <Navigate to="/login" replace />;
 };
 
@@ -137,13 +148,23 @@ function App() {
             {/* Ruta de login */}
             <Route path="/login" element={<LoginPage />} />
             
-            {/* Ruta protegida de home */}
+            {/* Ruta protegida de home para usuarios normales */}
             <Route
               path="/home"
               element={
                 <PrivateRoute>
                   <Home />
                 </PrivateRoute>
+              }
+            />
+            
+            {/* Ruta protegida de admin solo para administradores */}
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
               }
             />
             
