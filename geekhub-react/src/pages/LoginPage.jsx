@@ -62,7 +62,7 @@ const LoginPage = () => {
           marginBottom: '10px',
           color: '#343a40'
         }}>
-          🔐 Bienvenido
+          Bienvenido
         </h1>
         <p style={{
           fontSize: '1.1rem',

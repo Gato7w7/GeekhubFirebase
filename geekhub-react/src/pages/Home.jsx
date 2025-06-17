@@ -1,4 +1,3 @@
-// src/pages/Home.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
@@ -33,11 +32,11 @@ export default function Home() {
         {/* Información del usuario */}
         <div className="bg-gray-800 p-3 rounded-lg mb-4">
           <div className="flex items-center mb-2">
-            <div className="bg-green-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">
+            {/* <div className="bg-green-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">
               {user?.email?.charAt(0)?.toUpperCase() || 'U'}
-            </div>
+            </div> */}
             <div className="flex-1">
-              <p className="text-sm font-semibold truncate">
+              <p className="text-sm font-semibold truncate"> 
                 {user?.displayName || 'Usuario'}
               </p>
               <p className="text-xs text-gray-400 truncate">
@@ -125,7 +124,7 @@ export default function Home() {
                 const commentText = comment?.texto || '';
                 const commentUser = comment?.usuario || 'Anónimo';
                 const commentDate = comment?.fecha?.toDate?.()?.toLocaleString() || 'Fecha no disponible';
-                const userInitial = commentUser.charAt(0)?.toUpperCase() || 'A';
+                // const userInitial = commentUser.charAt(0)?.toUpperCase() || 'A';
                 
                 return (
                   <div key={comment.id} className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
@@ -134,9 +133,9 @@ export default function Home() {
                     </p>
                     <div className="flex items-center justify-between text-sm text-gray-500">
                       <div className="flex items-center">
-                        <div className="bg-blue-100 rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold text-blue-800 mr-2">
+                        {/* <div className="bg-blue-100 rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold text-blue-800 mr-2">
                           {userInitial}
-                        </div>
+                        </div> */}
                         <span className="font-semibold text-gray-700">
                           {commentUser}
                         </span>
