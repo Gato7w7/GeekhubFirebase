@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../services/firebase';
 import { useAuthContext } from '../../context/AuthContext';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../services/firebase';
+
 
 const RegisterForm = () => {
   const [email, setEmail] = useState('');
@@ -72,21 +75,33 @@ const RegisterForm = () => {
   };
 
   const handleRegister = async (e) => {
-    e.preventDefault();
-    setError('');
+  e.preventDefault();
+  setError('');
 
-    if (!validarEntrada(email, password)) return;
+  if (!validarEntrada(email, password)) return;
 
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      localStorage.setItem('token', await user.getIdToken());
-      setUser(user);
-      navigate('/home');
-    } catch (err) {
-      setError('Error al registrar. Intenta con otro email.');
-    }
-  };
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // ✅ Guardar el nuevo usuario en Firestore con rol "user"
+    await setDoc(doc(db, 'users', user.uid), {
+      email: user.email,
+      role: 'user',
+      createdAt: serverTimestamp(),
+      isFirstAdmin: false,
+      displayName: '', // Puedes pedir nombre en otro campo si lo deseas
+    });
+
+    // Guardar token y navegar
+    localStorage.setItem('token', await user.getIdToken());
+    setUser(user);
+    navigate('/home');
+  } catch (err) {
+    setError('Error al registrar. Intenta con otro email.');
+  }
+};
+
 
   return (
     <form onSubmit={handleRegister}>
