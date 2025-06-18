@@ -4,12 +4,13 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { useAuthContext } from '../context/AuthContext';
 import { useComments } from '../hooks/useComments';
+import CommentForm from '../components/CommentForm'; // 👈 NUEVA IMPORTACIÓN
 
 const temasDisponibles = ['General', 'Juegos', 'Tecnologia', 'Off-topic'];
 
 export default function Home() {
   const [temaSeleccionado, setTemaSeleccionado] = useState('General');
-  const { comments, loading, error } = useComments(temaSeleccionado);
+  const { comments, loading, error, refetch } = useComments(temaSeleccionado); // 👈 refetch
   const { user } = useAuthContext();
   const navigate = useNavigate();
   const [loggingOut, setLoggingOut] = useState(false);
@@ -32,9 +33,6 @@ export default function Home() {
         {/* Información del usuario */}
         <div className="bg-gray-800 p-3 rounded-lg mb-4">
           <div className="flex items-center mb-2">
-            {/* <div className="bg-green-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">
-              {user?.email?.charAt(0)?.toUpperCase() || 'U'}
-            </div> */}
             <div className="flex-1">
               <p className="text-sm font-semibold truncate"> 
                 {user?.displayName || 'Usuario'}
@@ -74,7 +72,7 @@ export default function Home() {
           </ul>
         </div>
 
-        {/* Debug info (puedes remover esto después) */}
+        {/* Debug */}
         <div className="mt-4 p-2 bg-gray-800 rounded text-xs">
           <p className="text-gray-400">Debug:</p>
           <p className="text-green-400">✓ Usuario autenticado</p>
@@ -82,7 +80,7 @@ export default function Home() {
         </div>
       </aside>
 
-      {/* Contenido de comentarios */}
+      {/* Contenido principal */}
       <main className="flex-1 bg-gray-100 p-6 overflow-y-auto">
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-between items-center mb-6">
@@ -93,6 +91,12 @@ export default function Home() {
               {comments.length} comentario{comments.length !== 1 ? 's' : ''}
             </div>
           </div>
+
+          {/* 👇 NUEVO FORMULARIO PARA AGREGAR COMENTARIOS */}
+          <CommentForm 
+            temaSeleccionado={temaSeleccionado}
+            onCommentAdded={refetch} // Para recargar al comentar
+          />
 
           {error ? (
             <div className="text-center py-12 bg-red-50 rounded-lg border border-red-200">
@@ -120,12 +124,9 @@ export default function Home() {
           ) : (
             <div className="space-y-4">
               {comments.map((comment) => {
-                // Validación defensiva de datos
                 const commentText = comment?.texto || '';
                 const commentUser = comment?.usuario || 'Anónimo';
                 const commentDate = comment?.fecha?.toDate?.()?.toLocaleString() || 'Fecha no disponible';
-                // const userInitial = commentUser.charAt(0)?.toUpperCase() || 'A';
-                
                 return (
                   <div key={comment.id} className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
                     <p className="text-gray-800 text-lg leading-relaxed mb-3">
@@ -133,9 +134,6 @@ export default function Home() {
                     </p>
                     <div className="flex items-center justify-between text-sm text-gray-500">
                       <div className="flex items-center">
-                        {/* <div className="bg-blue-100 rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold text-blue-800 mr-2">
-                          {userInitial}
-                        </div> */}
                         <span className="font-semibold text-gray-700">
                           {commentUser}
                         </span>
