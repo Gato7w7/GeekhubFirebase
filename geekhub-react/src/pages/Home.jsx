@@ -4,13 +4,14 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { useAuthContext } from '../context/AuthContext';
 import { useComments } from '../hooks/useComments';
-import CommentForm from '../components/CommentForm'; // 👈 NUEVA IMPORTACIÓN
+import CommentForm from '../components/CommentForm';
+import '../styles/stylehome.css'; // Import your styles
 
 const temasDisponibles = ['General', 'Juegos', 'Tecnologia', 'Off-topic'];
 
 export default function Home() {
   const [temaSeleccionado, setTemaSeleccionado] = useState('General');
-  const { comments, loading, error, refetch } = useComments(temaSeleccionado); // 👈 refetch
+  const { comments, loading, error, refetch } = useComments(temaSeleccionado);
   const { user } = useAuthContext();
   const navigate = useNavigate();
   const [loggingOut, setLoggingOut] = useState(false);
@@ -27,128 +28,94 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen">
-      {/* Menú lateral */}
-      <aside className="w-64 bg-gray-900 text-white p-4 flex flex-col">
-        {/* Información del usuario */}
-        <div className="bg-gray-800 p-3 rounded-lg mb-4">
-          <div className="flex items-center mb-2">
-            <div className="flex-1">
-              <p className="text-sm font-semibold truncate"> 
-                {user?.displayName || 'Usuario'}
-              </p>
-              <p className="text-xs text-gray-400 truncate">
-                {user?.email || 'Sin email'}
-              </p>
-            </div>
-          </div>
+    <div className="home-container">
+      {/* Header superior */}
+      <header className="header">
+        <div className="header-left">
+          <h1 className="app-title">GeekHub</h1>
+        </div>
+        <div className="header-right">
+          <span className="user-email">{user?.email || 'Sin email'}</span>
           <button
             onClick={handleLogout}
             disabled={loggingOut}
-            className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white text-sm py-2 px-3 rounded transition-colors"
+            className="logout-btn"
           >
-            {loggingOut ? 'Cerrando...' : 'Cerrar sesión'}
+            {loggingOut ? 'Cerrando sesión' : 'Cerrar sesión'}
           </button>
         </div>
+      </header>
 
-        {/* Navegación de temas */}
-        <div className="flex-1">
-          <h2 className="text-xl font-bold mb-4">Temas</h2>
-          <ul className="space-y-1">
-            {temasDisponibles.map((tema) => (
-              <li key={tema}>
-                <button
-                  className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                    tema === temaSeleccionado 
-                      ? 'bg-green-800 text-white' 
-                      : 'hover:bg-gray-700 text-gray-300'
-                  }`}
-                  onClick={() => setTemaSeleccionado(tema)}
-                >
-                  {tema}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
+      {/* Contenedor principal */}
+      <div className="main-container">
+        {/* Sidebar de temas */}
+        <aside className="sidebar">
+          <div className="temas">
+            <h2>Temas</h2>
+            <ul>
+              {temasDisponibles.map((tema) => (
+                <li key={tema}>
+                  <button
+                    className={`tema-btn ${
+                      tema === temaSeleccionado ? 'activo' : ''
+                    }`}
+                    onClick={() => setTemaSeleccionado(tema)}
+                  >
+                    {tema}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
 
-        {/* Debug */}
-        <div className="mt-4 p-2 bg-gray-800 rounded text-xs">
-          <p className="text-gray-400">Debug:</p>
-          <p className="text-green-400">✓ Usuario autenticado</p>
-          <p className="text-gray-300">UID: {user?.uid?.slice(0, 8)}...</p>
-        </div>
-      </aside>
-
-      {/* Contenido principal */}
-      <main className="flex-1 bg-gray-100 p-6 overflow-y-auto">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-800">
-              Comentarios: {temaSeleccionado}
-            </h1>
-            <div className="text-sm text-gray-600 bg-white px-3 py-1 rounded-full shadow">
-              {comments.length} comentario{comments.length !== 1 ? 's' : ''}
-            </div>
+        {/* Contenido principal */}
+        <main className="main-content">
+          <div className="content-header">
+            <h1 className="content-title">Comentarios - {temaSeleccionado}</h1>
           </div>
 
-          {/* 👇 NUEVO FORMULARIO PARA AGREGAR COMENTARIOS */}
-          <CommentForm 
-            temaSeleccionado={temaSeleccionado}
-            onCommentAdded={refetch} // Para recargar al comentar
-          />
-
           {error ? (
-            <div className="text-center py-12 bg-red-50 rounded-lg border border-red-200">
-              <p className="text-red-600 text-lg font-semibold">Error al cargar comentarios</p>
-              <p className="text-red-500 text-sm mt-2">{error}</p>
-              <button 
-                onClick={() => window.location.reload()} 
-                className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-              >
-                Reintentar
-              </button>
+            <div className="error">
+              <p>Error al cargar comentarios</p>
+              <p>{error}</p>
+              <button onClick={() => window.location.reload()}>Reintentar</button>
             </div>
           ) : loading ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">Cargando comentarios...</p>
-              </div>
+            <div className="cargando">
+              <div className="spinner"></div>
+              <p>Cargando comentarios...</p>
             </div>
           ) : comments.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-lg shadow">
-              <p className="text-gray-500 text-lg">No hay comentarios para este tema.</p>
-              <p className="text-gray-400 text-sm mt-2">¡Sé el primero en comentar!</p>
+            <div className="no-comentarios">
+              <p>No hay comentarios para este tema.</p>
+              <p>¡Sé el primero en comentar!</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="lista-comentarios">
               {comments.map((comment) => {
-                const commentText = comment?.texto || '';
-                const commentUser = comment?.usuario || 'Anónimo';
-                const commentDate = comment?.fecha?.toDate?.()?.toLocaleString() || 'Fecha no disponible';
+                const texto = comment?.texto || '';
+                const usuario = comment?.usuario || 'Anónimo';
+                const fecha = comment?.fecha?.toDate?.()?.toLocaleString() || 'Fecha no disponible';
                 return (
-                  <div key={comment.id} className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                    <p className="text-gray-800 text-lg leading-relaxed mb-3">
-                      {commentText}
-                    </p>
-                    <div className="flex items-center justify-between text-sm text-gray-500">
-                      <div className="flex items-center">
-                        <span className="font-semibold text-gray-700">
-                          {commentUser}
-                        </span>
-                      </div>
-                      <span className="text-gray-400">
-                        {commentDate}
-                      </span>
+                  <div key={comment.id} className="comentario">
+                    <div className="comentario-header">
+                      <span className="usuario">{usuario}</span>
+                      <span className="fecha">{fecha}</span>
                     </div>
+                    <p className="comentario-texto">{texto}</p>
                   </div>
                 );
               })}
             </div>
           )}
-        </div>
-      </main>
+
+          <CommentForm
+            temaSeleccionado={temaSeleccionado}
+            onCommentAdded={refetch}
+          />
+        </main>
+      </div>
     </div>
   );
 }

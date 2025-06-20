@@ -1,4 +1,3 @@
-// src/components/CommentForm.jsx
 import React, { useState } from 'react';
 import { addComment } from '../services/commentService';
 import { useAuthContext } from '../context/AuthContext';
@@ -44,23 +43,16 @@ const CommentForm = ({ temaSeleccionado, onCommentAdded }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mb-6 bg-white p-4 rounded shadow">
-      <h2 className="text-lg font-semibold text-gray-800 mb-2">Agregar comentario</h2>
+    <form className="form-comentario" onSubmit={handleSubmit}>
       <textarea
-        className="w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring focus:border-green-500"
-        rows="4"
         value={texto}
         onChange={(e) => setTexto(e.target.value)}
-        placeholder="Escribe tu comentario aquí..."
+        placeholder="Escribe tu comentario..."
         disabled={enviando}
-      ></textarea>
-      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
-      <button
-        type="submit"
-        disabled={enviando}
-        className="mt-3 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded disabled:bg-green-300"
-      >
-        {enviando ? 'Enviando...' : 'Comentar'}
+      />
+      {error && <p className="error">{error}</p>}
+      <button type="submit" disabled={enviando || !texto.trim()}>
+        {enviando ? 'Enviando...' : 'Enviar'}
       </button>
     </form>
   );

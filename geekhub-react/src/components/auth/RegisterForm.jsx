@@ -6,7 +6,6 @@ import { useAuthContext } from '../../context/AuthContext';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 
-
 const RegisterForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,7 +14,6 @@ const RegisterForm = () => {
   const { setUser } = useAuthContext();
 
   const mostrarMensaje = (tipo, mensaje) => {
-    // Solo muestra el error por ahora
     if (tipo === 'error') {
       setError(mensaje);
     }
@@ -75,54 +73,53 @@ const RegisterForm = () => {
   };
 
   const handleRegister = async (e) => {
-  e.preventDefault();
-  setError('');
+    e.preventDefault();
+    setError('');
 
-  if (!validarEntrada(email, password)) return;
+    if (!validarEntrada(email, password)) return;
 
-  try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-    // ✅ Guardar el nuevo usuario en Firestore con rol "user"
-    await setDoc(doc(db, 'users', user.uid), {
-      email: user.email,
-      role: 'user',
-      createdAt: serverTimestamp(),
-      isFirstAdmin: false,
-      displayName: '', // Puedes pedir nombre en otro campo si lo deseas
-    });
+      await setDoc(doc(db, 'users', user.uid), {
+        email: user.email,
+        role: 'user',
+        createdAt: serverTimestamp(),
+        isFirstAdmin: false,
+        displayName: '',
+      });
 
-    // Guardar token y navegar
-    localStorage.setItem('token', await user.getIdToken());
-    setUser(user);
-    navigate('/home');
-  } catch (err) {
-    setError('Error al registrar. Intenta con otro email.');
-  }
-};
-
+      localStorage.setItem('token', await user.getIdToken());
+      setUser(user);
+      navigate('/home');
+    } catch (err) {
+      setError('Error al registrar. Intenta con otro email.');
+    }
+  };
 
   return (
-    <form onSubmit={handleRegister}>
-      <h2>Registrarse</h2>
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-      />
-      <input
-        type="password"
-        placeholder="Contraseña"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
-      <button type="submit">Registrar</button>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-    </form>
+    <div className="login-container">
+      <form onSubmit={handleRegister}>
+        <h2>Registrarse</h2>
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Contraseña"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <button type="submit">Registrar</button>
+        {error && <p className="error-message">{error}</p>}
+      </form>
+    </div>
   );
 };
 
