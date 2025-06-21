@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../services/firebase';
 import { useAuthContext } from '../../context/AuthContext';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, getDocs, collection, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 
 const RegisterForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { setUser } = useAuthContext();
@@ -19,8 +20,8 @@ const RegisterForm = () => {
     }
   };
 
-  const validarEntrada = (email, password) => {
-    if (!email || !password) {
+  const validarEntrada = (email, password, displayName) => {
+    if (!email || !password || !displayName) {
       mostrarMensaje("error", "Por favor, completa todos los campos");
       return false;
     }
@@ -76,9 +77,53 @@ const RegisterForm = () => {
     e.preventDefault();
     setError('');
 
-    if (!validarEntrada(email, password)) return;
+    if (!validarEntrada(email, password, displayName)) return;
 
     try {
+      // Verificar si ya existe un usuario pendiente creado por admin
+      const usersCollection = collection(db, 'users');
+      const userSnapshot = await getDocs(usersCollection);
+      const pendingUser = userSnapshot.docs.find(doc => 
+        doc.data().email === email && doc.data().status === 'pending'
+      );
+
+      if (pendingUser) {
+        // Usuario creado por admin - activar cuenta
+        console.log('Activando cuenta de usuario creado por admin');
+        
+        // Crear usuario en Firebase Auth
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Actualizar el documento existente con el UID real y activar
+        await updateDoc(doc(db, 'users', pendingUser.id), {
+          uid: user.uid,
+          status: 'active',
+          password: password, // Actualizar con la contraseña real
+          updatedAt: serverTimestamp()
+        });
+
+        // Eliminar el documento temporal y crear uno nuevo con el UID correcto
+        await deleteDoc(doc(db, 'users', pendingUser.id));
+        
+        // Crear nuevo documento con el UID real
+        await setDoc(doc(db, 'users', user.uid), {
+          email: user.email,
+          displayName: displayName,
+          role: pendingUser.data().role,
+          createdAt: pendingUser.data().createdAt,
+          createdBy: pendingUser.data().createdBy,
+          status: 'active',
+          updatedAt: serverTimestamp()
+        });
+
+        localStorage.setItem('token', await user.getIdToken());
+        setUser(user);
+        navigate('/home');
+        return;
+      }
+
+      // Usuario normal - crear nueva cuenta
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
@@ -87,14 +132,20 @@ const RegisterForm = () => {
         role: 'user',
         createdAt: serverTimestamp(),
         isFirstAdmin: false,
-        displayName: '',
+        displayName: displayName,
+        status: 'active'
       });
 
       localStorage.setItem('token', await user.getIdToken());
       setUser(user);
       navigate('/home');
     } catch (err) {
-      setError('Error al registrar. Intenta con otro email.');
+      console.error('Error en registro:', err);
+      if (err.code === 'auth/email-already-in-use') {
+        setError('Este email ya está registrado. Intenta iniciar sesión.');
+      } else {
+        setError('Error al registrar. Intenta con otro email.');
+      }
     }
   };
 
@@ -114,6 +165,13 @@ const RegisterForm = () => {
           placeholder="Contraseña"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <input
+          type="text"
+          placeholder="Nombre"
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
           required
         />
         <button type="submit">Registrar</button>

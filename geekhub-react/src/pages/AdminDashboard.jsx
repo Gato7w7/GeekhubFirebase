@@ -14,7 +14,6 @@ const AdminDashboard = () => {
   const [showAddUser, setShowAddUser] = useState(false);
   const [newUser, setNewUser] = useState({
     email: '',
-    password: '',
     displayName: '',
     role: 'user'
   });
@@ -66,12 +65,8 @@ const AdminDashboard = () => {
 
     try {
       // Validaciones adicionales
-      if (!newUser.email || !newUser.password || !newUser.displayName) {
-        throw new Error('Todos los campos son obligatorios');
-      }
-
-      if (newUser.password.length < 6) {
-        throw new Error('La contraseña debe tener al menos 6 caracteres');
+      if (!newUser.email || !newUser.displayName) {
+        throw new Error('Email y nombre son obligatorios');
       }
 
       // Verificar si el email ya existe
@@ -80,30 +75,25 @@ const AdminDashboard = () => {
         throw new Error('Este email ya está registrado');
       }
 
-      console.log('Creando usuario en Firebase Auth...');
+      console.log('Creando usuario en Firestore...');
       
-      // Crear usuario en Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(
-        auth, 
-        newUser.email, 
-        newUser.password
-      );
+      // Crear un ID temporal para el usuario
+      const tempUserId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
-      console.log('Usuario creado en Auth con UID:', userCredential.user.uid);
-      
-      // Agregar datos del usuario a Firestore
+      // Agregar datos del usuario a Firestore (sin Auth por ahora)
       const userData = {
         email: newUser.email,
         displayName: newUser.displayName,
         role: newUser.role,
         createdAt: new Date(),
-        createdBy: currentUser.uid
+        createdBy: currentUser.uid,
+        status: 'pending' // Estado pendiente hasta que se registre
       };
 
       console.log('Guardando datos en Firestore...');
-      await setDoc(doc(db, 'users', userCredential.user.uid), userData);
+      await setDoc(doc(db, 'users', tempUserId), userData);
       
-      console.log('Usuario creado exitosamente en ambos servicios');
+      console.log('Usuario creado exitosamente en Firestore');
 
       // Actualizar la lista local
       await loadUsers();
@@ -111,26 +101,19 @@ const AdminDashboard = () => {
       // Limpiar formulario
       setNewUser({
         email: '',
-        password: '',
         displayName: '',
         role: 'user'
       });
       setShowAddUser(false);
       
-      alert('Usuario agregado correctamente. El usuario puede iniciar sesión inmediatamente.');
+      alert('Usuario agregado correctamente. El usuario debe registrarse con su email para activar su cuenta.');
     } catch (err) {
       console.error('Error detallado al agregar usuario:', err);
       
-      // Manejo específico de errores de Firebase
+      // Manejo específico de errores
       let errorMessage = 'Error al agregar el usuario';
       
-      if (err.code === 'auth/email-already-in-use') {
-        errorMessage = 'Este email ya está registrado en Firebase Auth';
-      } else if (err.code === 'auth/invalid-email') {
-        errorMessage = 'El formato del email no es válido';
-      } else if (err.code === 'auth/weak-password') {
-        errorMessage = 'La contraseña es demasiado débil';
-      } else if (err.message) {
+      if (err.message) {
         errorMessage = err.message;
       }
       
@@ -262,22 +245,11 @@ const AdminDashboard = () => {
                   }}
                 />
                 <input
-                  type="password"
-                  placeholder="Contraseña"
-                  value={newUser.password}
-                  onChange={(e) => setNewUser({...newUser, password: e.target.value})}
-                  required
-                  style={{
-                    padding: '10px',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px'
-                  }}
-                />
-                <input
                   type="text"
                   placeholder="Nombre completo"
                   value={newUser.displayName}
                   onChange={(e) => setNewUser({...newUser, displayName: e.target.value})}
+                  required
                   style={{
                     padding: '10px',
                     border: '1px solid #ccc',
@@ -297,6 +269,7 @@ const AdminDashboard = () => {
                   <option value="admin">Administrador</option>
                 </select>
               </div>
+              
               <button
                 type="submit"
                 disabled={addingUser}
@@ -341,6 +314,7 @@ const AdminDashboard = () => {
                     <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Email</th>
                     <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Nombre</th>
                     <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Rol</th>
+                    <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Estado</th>
                     <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Fecha Registro</th>
                     <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Acciones</th>
                   </tr>
@@ -364,6 +338,18 @@ const AdminDashboard = () => {
                           <option value="user">Usuario</option>
                           <option value="admin">Admin</option>
                         </select>
+                      </td>
+                      <td style={{ padding: '12px' }}>
+                        <span style={{
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          fontWeight: 'bold',
+                          backgroundColor: user.status === 'active' ? '#d4edda' : '#fff3cd',
+                          color: user.status === 'active' ? '#155724' : '#856404'
+                        }}>
+                          {user.status === 'active' ? 'Activo' : 'Pendiente'}
+                        </span>
                       </td>
                       <td style={{ padding: '12px' }}>
                         {user.createdAt?.toDate?.()?.toLocaleDateString?.() || 'N/A'}
