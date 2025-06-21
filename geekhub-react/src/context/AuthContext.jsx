@@ -2,7 +2,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../services/firebase'; // Asegúrate de que la ruta sea correcta
+import { auth, db } from '../services/firebase'; 
 
 const AuthContext = createContext();
 
@@ -15,19 +15,17 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
-          // Obtener el rol del usuario desde Firestore
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           
           if (userDoc.exists()) {
             const userData = userDoc.data();
-            setUserRole(userData.role || 'user'); // Por defecto 'user'
+            setUserRole(userData.role || 'user'); 
           } else {
-            // Si no existe el documento del usuario, crear uno por defecto
             setUserRole('user');
           }
         } catch (error) {
           console.error('Error obteniendo rol del usuario:', error);
-          setUserRole('user'); // Rol por defecto en caso de error
+          setUserRole('user'); 
         }
       } else {
         setUserRole(null);

@@ -320,3 +320,22 @@ html, body {
     justify-content: center;
   }
 }
+
+/* Personalizar scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1e2e24;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #00ed64;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #00d65e;
+}

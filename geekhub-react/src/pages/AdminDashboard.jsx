@@ -65,6 +65,23 @@ const AdminDashboard = () => {
     setError('');
 
     try {
+      // Validaciones adicionales
+      if (!newUser.email || !newUser.password || !newUser.displayName) {
+        throw new Error('Todos los campos son obligatorios');
+      }
+
+      if (newUser.password.length < 6) {
+        throw new Error('La contraseña debe tener al menos 6 caracteres');
+      }
+
+      // Verificar si el email ya existe
+      const existingUsers = users.filter(user => user.email === newUser.email);
+      if (existingUsers.length > 0) {
+        throw new Error('Este email ya está registrado');
+      }
+
+      console.log('Creando usuario en Firebase Auth...');
+      
       // Crear usuario en Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(
         auth, 
@@ -72,14 +89,21 @@ const AdminDashboard = () => {
         newUser.password
       );
       
+      console.log('Usuario creado en Auth con UID:', userCredential.user.uid);
+      
       // Agregar datos del usuario a Firestore
-      await setDoc(doc(db, 'users', userCredential.user.uid), {
+      const userData = {
         email: newUser.email,
         displayName: newUser.displayName,
         role: newUser.role,
         createdAt: new Date(),
         createdBy: currentUser.uid
-      });
+      };
+
+      console.log('Guardando datos en Firestore...');
+      await setDoc(doc(db, 'users', userCredential.user.uid), userData);
+      
+      console.log('Usuario creado exitosamente en ambos servicios');
 
       // Actualizar la lista local
       await loadUsers();
@@ -93,10 +117,24 @@ const AdminDashboard = () => {
       });
       setShowAddUser(false);
       
-      alert('Usuario agregado correctamente');
+      alert('Usuario agregado correctamente. El usuario puede iniciar sesión inmediatamente.');
     } catch (err) {
-      console.error('Error agregando usuario:', err);
-      setError('Error al agregar el usuario: ' + err.message);
+      console.error('Error detallado al agregar usuario:', err);
+      
+      // Manejo específico de errores de Firebase
+      let errorMessage = 'Error al agregar el usuario';
+      
+      if (err.code === 'auth/email-already-in-use') {
+        errorMessage = 'Este email ya está registrado en Firebase Auth';
+      } else if (err.code === 'auth/invalid-email') {
+        errorMessage = 'El formato del email no es válido';
+      } else if (err.code === 'auth/weak-password') {
+        errorMessage = 'La contraseña es demasiado débil';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setAddingUser(false);
     }
