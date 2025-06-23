@@ -14,13 +14,15 @@ html, body {
   width: 100%;
   height: 100vh;
 }
+
 /* Contenedor global de Home */
 .home-container {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh; /* Altura fija de la ventana */
   background-color: #0e1c1f;
   color: #e0f7e9;
+  overflow: hidden; /* Evita el scroll del contenedor principal */
 }
 
 /* Header superior */
@@ -31,6 +33,7 @@ html, body {
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid #2a4a37;
+  flex-shrink: 0; /* No se comprime */
 }
 
 .header-left {
@@ -76,6 +79,7 @@ html, body {
 .main-container {
   display: flex;
   flex: 1;
+  overflow: hidden; /* Evita que se expanda más allá de la ventana */
 }
 
 /* Sidebar de temas */
@@ -84,6 +88,8 @@ html, body {
   background-color: #1a2f33;
   padding: 20px;
   border-right: 1px solid #2a4a37;
+  flex-shrink: 0; /* No se comprime */
+  overflow-y: auto; /* Solo scroll interno si es necesario */
 }
 
 .sidebar h2 {
@@ -130,13 +136,16 @@ html, body {
 /* Contenido principal */
 .main-content {
   flex: 1;
-  padding: 30px;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  overflow: hidden; /* Evita el scroll del contenedor principal */
 }
 
 /* Header del contenido */
 .content-header {
-  margin-bottom: 30px;
+  margin-bottom: 20px;
+  flex-shrink: 0; /* No se comprime */
 }
 
 .content-title {
@@ -145,16 +154,90 @@ html, body {
   margin: 0;
 }
 
-/* Formulario de comentarios */
+/* Sección de comentarios - CAMBIO PRINCIPAL */
+.comentarios {
+  background-color: #1e2e24;
+  border-radius: 12px;
+  padding: 1.5rem;
+  color: #d1fadf;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden; /* Evita que se expanda */
+}
+
+.comentarios h2 {
+  margin: 0 0 20px 0;
+  flex-shrink: 0; /* El título no se comprime */
+}
+
+/* Lista de comentarios con altura fija */
+.lista-comentarios {
+  flex: 1; /* Toma todo el espacio disponible */
+  overflow-y: auto; /* Solo scroll vertical interno */
+  margin-bottom: 20px;
+  padding-right: 10px;
+  min-height: 0; /* Permite que se comprima si es necesario */
+}
+
+/* Cada comentario individual */
+.comentario {
+  background-color: #233c2d;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-left: 3px solid #00ed64;
+}
+
+/* Encabezado del comentario */
+.comentario-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.usuario {
+  color: #00ed64;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.fecha {
+  color: #a5d8c7;
+  font-style: italic;
+  font-size: 12px;
+}
+
+/* Contenido del comentario */
+.comentario-contenido {
+  line-height: 1.6;
+  color: #e0f7e9;
+  font-size: 15px;
+}
+
+.comentario-contenido p {
+  margin: 0;
+}
+
+/* Texto del comentario */
+.comentario-texto {
+  line-height: 1.6;
+  color: #e0f7e9;
+  margin: 0;
+  font-size: 15px;
+}
+
+/* Formulario de comentarios - Se mantiene fijo al final */
 .form-comentario {
-  margin-top: 30px;
-  margin-bottom: 30px;
   display: flex;
   flex-direction: column;
   gap: 15px;
-  background-color: #1e2e24;
+  background-color: #2a4a37;
   padding: 20px;
   border-radius: 12px;
+  flex-shrink: 0; /* No se comprime nunca */
 }
 
 .form-comentario textarea {
@@ -165,7 +248,8 @@ html, body {
   background-color: #233c2d;
   color: #e0f7e9;
   resize: vertical;
-  min-height: 120px;
+  min-height: 100px;
+  max-height: 150px; /* Límite máximo de altura */
   font-size: 15px;
   font-family: inherit;
   box-sizing: border-box;
@@ -203,53 +287,13 @@ html, body {
   cursor: not-allowed;
 }
 
-/* Contenedor de todos los comentarios */
-.lista-comentarios {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* Cada comentario */
-.comentario {
-  background-color: #1e2e24;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Encabezado del comentario */
-.comentario-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.usuario {
-  color: #00ed64;
-  font-weight: bold;
-  font-size: 14px;
-}
-
-.fecha {
-  color: #a5d8c7;
-  font-style: italic;
-  font-size: 12px;
-}
-
-/* Texto del comentario */
-.comentario-texto {
-  line-height: 1.6;
-  color: #e0f7e9;
-  margin: 0;
-  font-size: 15px;
-}
-
 /* Estados de carga y error */
 .cargando {
-  text-align: center;
-  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
   color: #a5d8c7;
 }
 
@@ -260,7 +304,7 @@ html, body {
   border-top: 4px solid #00ed64;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto 15px;
+  margin-bottom: 15px;
 }
 
 @keyframes spin {
@@ -269,8 +313,11 @@ html, body {
 }
 
 .no-comentarios {
-  text-align: center;
-  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
   color: #a5d8c7;
 }
 
@@ -280,6 +327,11 @@ html, body {
   padding: 20px;
   border-radius: 8px;
   text-align: center;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .error button {
@@ -292,6 +344,24 @@ html, body {
   margin-top: 10px;
 }
 
+/* Scrollbar personalizada para la lista de comentarios */
+.lista-comentarios::-webkit-scrollbar {
+  width: 8px;
+}
+
+.lista-comentarios::-webkit-scrollbar-track {
+  background: #1e2e24;
+  border-radius: 4px;
+}
+
+.lista-comentarios::-webkit-scrollbar-thumb {
+  background: #00ed64;
+  border-radius: 4px;
+}
+
+.lista-comentarios::-webkit-scrollbar-thumb:hover {
+  background: #00d65e;
+}
 /* Responsive */
 @media (max-width: 768px) {
   .main-container {
