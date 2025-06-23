@@ -12,9 +12,10 @@ const temasDisponibles = ['General', 'Juegos', 'Tecnologia', 'Off-topic'];
 export default function Home() {
   const [temaSeleccionado, setTemaSeleccionado] = useState('General');
   const { comments, loading, error, refetch } = useComments(temaSeleccionado);
-  const { user } = useAuthContext();
+  const { user, userRole } = useAuthContext();
   const navigate = useNavigate();
   const [loggingOut, setLoggingOut] = useState(false);
+  
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -36,6 +37,15 @@ export default function Home() {
         </div>
         <div className="header-right">
           <span className="user-email">{user?.email || 'Sin email'}</span>
+          {/* Botón para ir al panel de admin solo si eres admin */}
+          {userRole === 'admin' && (
+            <button
+              className="logout-btn"
+              onClick={() => navigate('/admin')}
+            >
+              Panel Admin
+            </button>
+          )}
           <button
             onClick={handleLogout}
             disabled={loggingOut}
@@ -56,9 +66,8 @@ export default function Home() {
               {temasDisponibles.map((tema) => (
                 <li key={tema}>
                   <button
-                    className={`tema-btn ${
-                      tema === temaSeleccionado ? 'activo' : ''
-                    }`}
+                    className={`tema-btn ${tema === temaSeleccionado ? 'activo' : ''
+                      }`}
                     onClick={() => setTemaSeleccionado(tema)}
                   >
                     {tema}

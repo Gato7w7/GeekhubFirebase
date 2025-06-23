@@ -200,6 +200,18 @@ const AdminDashboard = () => {
             </p>
           </div>
           <button
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#6c757d',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }} onClick={() => navigate('/home')}
+          >
+            Home
+          </button>
+          <button
             onClick={handleLogout}
             style={{
               padding: '10px 20px',
