@@ -1,8 +1,8 @@
 // src/pages/AdminDashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { signOut } from 'firebase/auth';
-import { collection, getDocs, doc, deleteDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { collection, getDocs, doc, setDoc, updateDoc } from 'firebase/firestore';
+//import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '../services/firebase';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
@@ -18,7 +18,7 @@ const AdminDashboard = () => {
     role: 'user'
   });
   const [addingUser, setAddingUser] = useState(false);
-  
+
   const navigate = useNavigate();
   const { user: currentUser } = useAuthContext();
 
@@ -43,18 +43,30 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleDeleteUser = async (userId) => {
-    if (!window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
+  const handleToggleUserStatus = async (userId, currentStatus) => {
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    const action = newStatus === 'active' ? 'activar' : 'desactivar';
+
+    if (!window.confirm(`¿Estás seguro de que quieres ${action} este usuario?`)) {
       return;
     }
 
     try {
-      await deleteDoc(doc(db, 'users', userId));
-      setUsers(users.filter(user => user.id !== userId));
-      alert('Usuario eliminado correctamente');
+      await updateDoc(doc(db, 'users', userId), {
+        status: newStatus,
+        updatedAt: new Date(),
+        updatedBy: currentUser.uid
+      });
+
+      // Actualizar la lista local
+      setUsers(users.map(user =>
+        user.id === userId ? { ...user, status: newStatus } : user
+      ));
+
+      alert(`Usuario ${action === 'activar' ? 'activado' : 'desactivado'} correctamente`);
     } catch (err) {
-      console.error('Error eliminando usuario:', err);
-      alert('Error al eliminar el usuario');
+      console.error('Error actualizando status del usuario:', err);
+      alert('Error al actualizar el estado del usuario');
     }
   };
 
@@ -76,10 +88,10 @@ const AdminDashboard = () => {
       }
 
       console.log('Creando usuario en Firestore...');
-      
+
       // Crear un ID temporal para el usuario
       const tempUserId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
+
       // Agregar datos del usuario a Firestore (sin Auth por ahora)
       const userData = {
         email: newUser.email,
@@ -92,12 +104,12 @@ const AdminDashboard = () => {
 
       console.log('Guardando datos en Firestore...');
       await setDoc(doc(db, 'users', tempUserId), userData);
-      
+
       console.log('Usuario creado exitosamente en Firestore');
 
       // Actualizar la lista local
       await loadUsers();
-      
+
       // Limpiar formulario
       setNewUser({
         email: '',
@@ -105,18 +117,18 @@ const AdminDashboard = () => {
         role: 'user'
       });
       setShowAddUser(false);
-      
+
       alert('Usuario agregado correctamente. El usuario debe registrarse con su email para activar su cuenta.');
     } catch (err) {
       console.error('Error detallado al agregar usuario:', err);
-      
+
       // Manejo específico de errores
       let errorMessage = 'Error al agregar el usuario';
-      
+
       if (err.message) {
         errorMessage = err.message;
       }
-      
+
       setError(errorMessage);
     } finally {
       setAddingUser(false);
@@ -128,12 +140,12 @@ const AdminDashboard = () => {
       await updateDoc(doc(db, 'users', userId), {
         role: newRole
       });
-      
+
       // Actualizar la lista local
-      setUsers(users.map(user => 
+      setUsers(users.map(user =>
         user.id === userId ? { ...user, role: newRole } : user
       ));
-      
+
       alert('Rol actualizado correctamente');
     } catch (err) {
       console.error('Error actualizando rol:', err);
@@ -152,11 +164,11 @@ const AdminDashboard = () => {
 
   if (loading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh'
       }}>
         <p>Cargando panel de administración...</p>
       </div>
@@ -164,7 +176,7 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div style={{ 
+    <div style={{
       minHeight: '100vh',
       backgroundColor: '#f8f9fa',
       padding: '20px'
@@ -236,7 +248,7 @@ const AdminDashboard = () => {
                   type="email"
                   placeholder="Email"
                   value={newUser.email}
-                  onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
                   required
                   style={{
                     padding: '10px',
@@ -248,7 +260,7 @@ const AdminDashboard = () => {
                   type="text"
                   placeholder="Nombre completo"
                   value={newUser.displayName}
-                  onChange={(e) => setNewUser({...newUser, displayName: e.target.value})}
+                  onChange={(e) => setNewUser({ ...newUser, displayName: e.target.value })}
                   required
                   style={{
                     padding: '10px',
@@ -258,7 +270,7 @@ const AdminDashboard = () => {
                 />
                 <select
                   value={newUser.role}
-                  onChange={(e) => setNewUser({...newUser, role: e.target.value})}
+                  onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
                   style={{
                     padding: '10px',
                     border: '1px solid #ccc',
@@ -269,7 +281,7 @@ const AdminDashboard = () => {
                   <option value="admin">Administrador</option>
                 </select>
               </div>
-              
+
               <button
                 type="submit"
                 disabled={addingUser}
@@ -301,7 +313,7 @@ const AdminDashboard = () => {
           <h3 style={{ padding: '20px', margin: 0, borderBottom: '1px solid #dee2e6' }}>
             Usuarios Registrados ({users.length})
           </h3>
-          
+
           {users.length === 0 ? (
             <p style={{ padding: '20px', margin: 0, textAlign: 'center', color: '#6c757d' }}>
               No hay usuarios registrados
@@ -356,19 +368,21 @@ const AdminDashboard = () => {
                       </td>
                       <td style={{ padding: '12px', textAlign: 'center' }}>
                         <button
-                          onClick={() => handleDeleteUser(user.id)}
+                          onClick={() => handleToggleUserStatus(user.id, user.status)}
                           disabled={user.id === currentUser.uid}
                           style={{
                             padding: '5px 10px',
-                            backgroundColor: user.id === currentUser.uid ? '#ccc' : '#dc3545',
-                            color: 'white',
+                            backgroundColor: user.id === currentUser.uid ? '#ccc' :
+                              user.status === 'active' ? '#ffc107' : '#28a745',
+                            color: user.id === currentUser.uid ? '#666' : 'white',
                             border: 'none',
                             borderRadius: '4px',
                             cursor: user.id === currentUser.uid ? 'not-allowed' : 'pointer',
                             fontSize: '12px'
                           }}
                         >
-                          {user.id === currentUser.uid ? 'Tú' : 'Eliminar'}
+                          {user.id === currentUser.uid ? 'Tú' :
+                            user.status === 'active' ? 'Desactivar' : 'Activar'}
                         </button>
                       </td>
                     </tr>
