@@ -15,7 +15,6 @@ export default function Home() {
   const { user, userRole } = useAuthContext();
   const navigate = useNavigate();
   const [loggingOut, setLoggingOut] = useState(false);
-  
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -23,21 +22,18 @@ export default function Home() {
       await signOut(auth);
       navigate('/login');
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
       setLoggingOut(false);
     }
   };
 
   return (
     <div className="home-container">
-      {/* Header superior */}
       <header className="header">
         <div className="header-left">
           <h1 className="app-title">GeekHub</h1>
         </div>
         <div className="header-right">
           <span className="user-email">{user?.email || 'Sin email'}</span>
-          {/* Botón para ir al panel de admin solo si eres admin */}
           {userRole === 'admin' && (
             <button
               className="logout-btn"
@@ -56,9 +52,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Contenedor principal */}
       <div className="main-container">
-        {/* Sidebar de temas */}
         <aside className="sidebar">
           <div className="temas">
             <h2>Temas</h2>
@@ -66,8 +60,7 @@ export default function Home() {
               {temasDisponibles.map((tema) => (
                 <li key={tema}>
                   <button
-                    className={`tema-btn ${tema === temaSeleccionado ? 'activo' : ''
-                      }`}
+                    className={`tema-btn ${tema === temaSeleccionado ? 'activo' : ''}`}
                     onClick={() => setTemaSeleccionado(tema)}
                   >
                     {tema}
@@ -78,7 +71,6 @@ export default function Home() {
           </div>
         </aside>
 
-        {/* Contenido principal */}
         <main className="main-content">
           <section className="comentarios">
             <h2>Comentarios - {temaSeleccionado}</h2>

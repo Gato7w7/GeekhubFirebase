@@ -18,7 +18,6 @@ export const useComments = (tema) => {
     setError(null);
 
     try {
-      console.log(`🔍 Obteniendo comentarios para tema: ${tema}`);
       const fetched = await getCommentsByTopic(tema);
 
       const validComments = Array.isArray(fetched)
@@ -29,20 +28,12 @@ export const useComments = (tema) => {
               comment.id &&
               (comment.texto || comment.usuario);
 
-            if (!isValid) {
-              console.warn('⚠️ Comentario inválido encontrado:', comment);
-            }
-
             return isValid;
           })
         : [];
 
-      console.log(`✅ Comentarios válidos obtenidos: ${validComments.length}`);
-      console.log('📄 Datos de comentarios:', validComments);
-
       setComments(validComments);
     } catch (err) {
-      console.error('❌ Error al obtener comentarios:', err);
       setError(err.message || 'Error al cargar comentarios');
       setComments([]);
     } finally {
@@ -50,11 +41,9 @@ export const useComments = (tema) => {
     }
   }, [tema]);
 
-  // Ejecutar al cargar o cambiar el tema
   useEffect(() => {
     fetchComments();
   }, [fetchComments]);
 
-  // Retornar también la función refetch
   return { comments, loading, error, refetch: fetchComments };
 };
