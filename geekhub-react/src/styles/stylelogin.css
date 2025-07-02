@@ -10,25 +10,33 @@ body {
   min-height: 100vh;
 }
 
-/* Contenedor general de login/registro */
-.login-forms-wrapper {
+/* Contenedor principal de la página de login */
+.login-page-container {
   display: flex;
   justify-content: center;
-  gap: 40px;
-  flex-wrap: wrap;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
-/* Contenedor de formularios individuales */
+/* Wrapper del login centrado */
+.login-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Contenedor del formulario de login */
 .login-container {
   background-color: #1c2d2d;
   padding: 40px;
   border-radius: 16px;
   box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
   width: 100%;
-  max-width: 350px;
+  max-width: 400px;
   box-sizing: border-box;
   text-align: center;
-  margin: 20px;
 }
 
 /* Título de los formularios */
@@ -40,13 +48,14 @@ body {
 /* Inputs */
 .login-container input {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   margin-bottom: 15px;
   border: none;
   border-radius: 8px;
   background-color: #324b4b;
   color: #fff;
   box-sizing: border-box;
+  font-size: 16px;
 }
 
 .login-container input::placeholder {
@@ -56,7 +65,7 @@ body {
 /* Botones */
 .login-container button {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   margin-bottom: 10px;
   border: none;
   border-radius: 8px;
@@ -65,6 +74,7 @@ body {
   font-weight: bold;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  font-size: 16px;
 }
 
 .login-container button:hover {
@@ -77,9 +87,66 @@ body {
   color: #ccc;
 }
 
+/* Sección de registro */
+.register-section {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #324b4b;
+}
+
+.register-text {
+  color: #aaa;
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+.register-button {
+  background-color: transparent !important;
+  border: 2px solid #00ffab !important;
+  color: #00ffab !important;
+  padding: 10px 20px !important;
+  margin-bottom: 0 !important;
+}
+
+.register-button:hover {
+  background-color: #00ffab !important;
+  color: #0c1c1c !important;
+}
+
+/* Contenedor de loading */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  color: #00ffab;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #324b4b;
+  border-top: 3px solid #00ffab;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* Errores */
 .login-container p.error-message {
-  color: red;
+  color: #ff6b6b;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.error-message {
+  color: #ff6b6b;
   font-size: 14px;
   margin-top: 10px;
 }
@@ -98,9 +165,25 @@ body {
 }
 
 /* Responsive */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
+  .login-page-container {
+    padding: 15px;
+  }
+  
   .login-container {
-    padding: 30px 20px;
+    padding: 30px 25px;
+    max-width: 350px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-page-container {
+    padding: 10px;
+  }
+
+  .login-container {
+    padding: 25px 20px;
+    max-width: 320px;
   }
 
   .login-container h2 {
@@ -110,11 +193,16 @@ body {
   .login-container input,
   .login-container button {
     font-size: 16px;
+    padding: 10px;
+  }
+
+  .register-text {
+    font-size: 13px;
   }
 }
-/* Estilo para mensajes de error */
-.error-message {
-  color: red;
-  font-size: 14px;
-  margin-top: 10px;
+
+@media (max-width: 360px) {
+  .login-container {
+    padding: 20px 15px;
+  }
 }

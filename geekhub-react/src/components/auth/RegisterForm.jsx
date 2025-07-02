@@ -6,11 +6,12 @@ import { useAuthContext } from '../../context/AuthContext';
 import { doc, setDoc, serverTimestamp, getDocs, collection, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 
-const RegisterForm = () => {
+const RegisterForm = ({ onSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { setUser } = useAuthContext();
 
@@ -76,8 +77,12 @@ const RegisterForm = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
 
-    if (!validarEntrada(email, password, displayName)) return;
+    if (!validarEntrada(email, password, displayName)) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
       // Verificar si ya existe un usuario pendiente creado por admin
@@ -119,6 +124,12 @@ const RegisterForm = () => {
 
         localStorage.setItem('token', await user.getIdToken());
         setUser(user);
+        
+        // Cerrar modal si existe la función onSuccess
+        if (onSuccess) {
+          onSuccess();
+        }
+        
         navigate('/home');
         return;
       }
@@ -138,6 +149,12 @@ const RegisterForm = () => {
 
       localStorage.setItem('token', await user.getIdToken());
       setUser(user);
+      
+      // Cerrar modal si existe la función onSuccess
+      if (onSuccess) {
+        onSuccess();
+      }
+      
       navigate('/home');
     } catch (err) {
       console.error('Error en registro:', err);
@@ -146,38 +163,42 @@ const RegisterForm = () => {
       } else {
         setError('Error al registrar. Intenta con otro email.');
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="login-container">
-      <form onSubmit={handleRegister}>
-        <h2>Registrarse</h2>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Contraseña"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <input
-          type="text"
-          placeholder="Nombre"
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-          required
-        />
-        <button type="submit">Registrar</button>
-        {error && <p className="error-message">{error}</p>}
-      </form>
-    </div>
+    <form onSubmit={handleRegister}>
+      <input
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+        disabled={isLoading}
+      />
+      <input
+        type="password"
+        placeholder="Contraseña"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+        disabled={isLoading}
+      />
+      <input
+        type="text"
+        placeholder="Nombre"
+        value={displayName}
+        onChange={(e) => setDisplayName(e.target.value)}
+        required
+        disabled={isLoading}
+      />
+      <button type="submit" disabled={isLoading}>
+        {isLoading ? 'Registrando...' : 'Registrar'}
+      </button>
+      {error && <p className="error-message">{error}</p>}
+    </form>
   );
 };
 

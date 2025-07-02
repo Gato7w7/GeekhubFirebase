@@ -1,14 +1,15 @@
 // src/pages/LoginPage.jsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
 import LoginForm from '../components/auth/LoginForm';
-import RegisterForm from '../components/auth/RegisterForm';
-import '../styles/stylelogin.css'; // Import your styles
+import RegisterModal from '../components/auth/RegisterModal';
+import '../styles/stylelogin.css';
 
 const LoginPage = () => {
   const { user, loading } = useAuthContext();
   const navigate = useNavigate();
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && user) {
@@ -16,13 +17,19 @@ const LoginPage = () => {
     }
   }, [user, loading, navigate]);
 
+  const openRegisterModal = () => {
+    setIsRegisterModalOpen(true);
+  };
+
+  const closeRegisterModal = () => {
+    setIsRegisterModalOpen(false);
+  };
+
   if (loading) {
     return (
-      <div className="login-loading-container">
-        <div className="login-loading-content">
-          <div className="spinner"></div>
-          <p className="loading-text">Verificando autenticación...</p>
-        </div>
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Verificando autenticación...</p>
       </div>
     );
   }
@@ -33,15 +40,26 @@ const LoginPage = () => {
 
   return (
     <div className="login-page-container">
-      <div className="login-page-content">
-        {/* <h1 className="login-page-title">Bienvenido</h1>
-        <p className="login-page-subtitle">Inicia sesión o regístrate para continuar</p> */}
-
-        <div className="login-forms-wrapper">
+      <div className="login-wrapper">
+        <div className="login-container">
           <LoginForm />
-          <RegisterForm />
+          <div className="register-section">
+            <p className="register-text">¿No tienes una cuenta?</p>
+            <button 
+              type="button" 
+              className="register-button"
+              onClick={openRegisterModal}
+            >
+              Registrarse
+            </button>
+          </div>
         </div>
       </div>
+
+      <RegisterModal 
+        isOpen={isRegisterModalOpen} 
+        onClose={closeRegisterModal} 
+      />
     </div>
   );
 };
