@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../services/firebase';
@@ -11,10 +11,12 @@ const temasDisponibles = ['General', 'Juegos', 'Tecnologia', 'Off-topic'];
 
 export default function Home() {
   const [temaSeleccionado, setTemaSeleccionado] = useState('General');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const { comments, loading, error, refetch } = useComments(temaSeleccionado);
   const { user, userRole } = useAuthContext();
   const navigate = useNavigate();
   const [loggingOut, setLoggingOut] = useState(false);
+  const dropdownRef = useRef(null);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -25,6 +27,43 @@ export default function Home() {
       setLoggingOut(false);
     }
   };
+
+  const handleTemaChange = (tema) => {
+    setTemaSeleccionado(tema);
+    setDropdownOpen(false);
+  };
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  // Cerrar dropdown al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Cerrar dropdown con ESC
+  useEffect(() => {
+    const handleEscKey = (event) => {
+      if (event.key === 'Escape') {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscKey);
+    return () => {
+      document.removeEventListener('keydown', handleEscKey);
+    };
+  }, []);
 
   return (
     <div className="home-container">
@@ -53,23 +92,36 @@ export default function Home() {
       </header>
 
       <div className="main-container">
-        <aside className="sidebar">
-          <div className="temas">
-            <h2>Temas</h2>
-            <ul>
+        {/* Nuevo selector de temas desplegable */}
+        <div className="tema-selector-container">
+          <div className="tema-selector" ref={dropdownRef}>
+            <button
+              className="tema-selector-btn"
+              onClick={toggleDropdown}
+              aria-expanded={dropdownOpen}
+              aria-haspopup="listbox"
+            >
+              <span>Tema: {temaSeleccionado}</span>
+              <span className={`tema-selector-arrow ${dropdownOpen ? 'open' : ''}`}>
+                ▼
+              </span>
+            </button>
+            
+            <div className={`tema-dropdown ${!dropdownOpen ? 'hidden' : ''}`} role="listbox">
               {temasDisponibles.map((tema) => (
-                <li key={tema}>
-                  <button
-                    className={`tema-btn ${tema === temaSeleccionado ? 'activo' : ''}`}
-                    onClick={() => setTemaSeleccionado(tema)}
-                  >
-                    {tema}
-                  </button>
-                </li>
+                <div
+                  key={tema}
+                  className={`tema-option ${tema === temaSeleccionado ? 'selected' : ''}`}
+                  onClick={() => handleTemaChange(tema)}
+                  role="option"
+                  aria-selected={tema === temaSeleccionado}
+                >
+                  {tema}
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
-        </aside>
+        </div>
 
         <main className="main-content">
           <section className="comentarios">
