@@ -82,6 +82,12 @@ export default function Home() {
             </button>
           )}
           <button
+            className="logout-btn"
+            onClick={() => navigate('/profile')}
+          >
+            Perfil
+          </button>
+          <button
             onClick={handleLogout}
             disabled={loggingOut}
             className="logout-btn"

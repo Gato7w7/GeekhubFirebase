@@ -9,6 +9,7 @@ import PrivateRoute from './components/auth/PrivateRoute';
 import AdminRoute from './components/auth/AdminRoute';
 import Home from './pages/Home';
 import AdminDashboard from './pages/AdminDashboard';
+import Profile from './pages/Profile';
 
 // Componente para manejar la redirección de la ruta raíz
 const RootRedirect = () => {
@@ -170,6 +171,9 @@ function App() {
             
             {/* Ruta de test (puedes protegerla también si quieres) */}
             <Route path="/test" element={<FirebaseTest />} />
+
+            {/* Ruta de perfil */}
+            <Route path="/profile" element={<Profile />} />
           </Routes>
         </div>
       </Router>
