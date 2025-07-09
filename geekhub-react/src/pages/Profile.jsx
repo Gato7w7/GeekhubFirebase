@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth, db } from '../services/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useAuthContext } from '../context/AuthContext';
 import '../styles/stylehome.css'; // Reutilizando los estilos del home
 
@@ -12,6 +12,7 @@ export default function Profile() {
   const [loggingOut, setLoggingOut] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [deactivating, setDeactivating] = useState(false);
 
   // Obtener datos del usuario desde Firestore
   useEffect(() => {
@@ -52,9 +53,42 @@ export default function Profile() {
     console.log('Editar perfil - funcionalidad por implementar');
   };
 
-  const handleDesactivateAccount = () => {
-    // Funcionalidad para desactivar cuenta - por implementar
-    console.log('Desactivar cuenta - funcionalidad por implementar');
+  const handleDesactivateAccount = async () => {
+    // Mostrar confirmación antes de desactivar
+    const confirmDeactivate = window.confirm(
+      '¿Estás seguro de que quieres desactivar tu cuenta? Esta acción cambiará tu estado a inactivo.'
+    );
+    
+    if (!confirmDeactivate) return;
+
+    setDeactivating(true);
+    
+    try {
+      // Actualizar el campo status a "inactive" en Firestore
+      const userDocRef = doc(db, 'users', user.uid);
+      await updateDoc(userDocRef, {
+        status: 'inactive',
+        deactivatedAt: new Date().toISOString() // Opcional: guardar fecha de desactivación
+      });
+
+      // Actualizar el estado local
+      setUserProfile(prev => ({
+        ...prev,
+        status: 'inactive'
+      }));
+
+      alert('Cuenta desactivada exitosamente. Serás redirigido al login.');
+      
+      // Cerrar sesión automáticamente después de desactivar
+      await signOut(auth);
+      navigate('/login');
+      
+    } catch (error) {
+      console.error('Error al desactivar cuenta:', error);
+      alert('Error al desactivar la cuenta. Por favor, intenta de nuevo.');
+    } finally {
+      setDeactivating(false);
+    }
   };
 
   return (
@@ -123,6 +157,13 @@ export default function Profile() {
                         {userRole || 'Usuario'}
                       </span>
                     </div>
+
+                    <div className="profile-field">
+                      <label>Estado:</label>
+                      <span className="profile-value">
+                        {userProfile?.status || 'active'}
+                      </span>
+                    </div>
                   </div>
                   
                   <div className="">
@@ -135,8 +176,10 @@ export default function Profile() {
                     <button 
                       className="logout-btn"
                       onClick={handleDesactivateAccount}
+                      disabled={deactivating || userProfile?.status === 'inactive'}
                     >
-                      Desactivar cuenta
+                      {deactivating ? 'Desactivando...' : 
+                       userProfile?.status === 'inactive' ? 'Cuenta Desactivada' : 'Desactivar cuenta'}
                     </button>
                   </div>
                 </div>
