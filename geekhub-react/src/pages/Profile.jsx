@@ -56,7 +56,7 @@ export default function Profile() {
   const handleDesactivateAccount = async () => {
     // Mostrar confirmación antes de desactivar
     const confirmDeactivate = window.confirm(
-      '¿Estás seguro de que quieres desactivar tu cuenta? Esta acción cambiará tu estado a inactivo.'
+      '¿Estás seguro de que quieres desactivar tu cuenta? Esta acción cambiará tu estado a inactivo. Puedes reactivar tu cuenta en cualquier momento desde la pagina de inicio de sesión.'
     );
     
     if (!confirmDeactivate) return;

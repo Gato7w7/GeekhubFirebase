@@ -10,6 +10,7 @@ import AdminRoute from './components/auth/AdminRoute';
 import Home from './pages/Home';
 import AdminDashboard from './pages/AdminDashboard';
 import Profile from './pages/Profile';
+import ReactivateAccountPage from './pages/ReactivateAccountPage';
 
 // Componente para manejar la redirección de la ruta raíz
 const RootRedirect = () => {
@@ -174,6 +175,9 @@ function App() {
 
             {/* Ruta de perfil */}
             <Route path="/profile" element={<Profile />} />
+
+            {/* Ruta de reactivar cuenta */}
+            <Route path="/reactivate-account" element={<ReactivateAccountPage />} />
           </Routes>
         </div>
       </Router>

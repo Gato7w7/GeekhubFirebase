@@ -25,6 +25,10 @@ const LoginPage = () => {
     setIsRegisterModalOpen(false);
   };
 
+  const handleReactivateAccount = () => {
+    navigate('/reactivate-account');
+  };
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -51,6 +55,17 @@ const LoginPage = () => {
               onClick={openRegisterModal}
             >
               Registrarse
+            </button>
+          </div>
+          
+          <div className="reactivate-section">
+            <p className="reactivate-text">¿Desactivaste tu cuenta?</p>
+            <button 
+              type="button" 
+              className="reactivate-link"
+              onClick={handleReactivateAccount}
+            >
+              Reactivar cuenta
             </button>
           </div>
         </div>

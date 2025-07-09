@@ -206,3 +206,75 @@ body {
     padding: 20px 15px;
   }
 }
+
+/* Agregar estos estilos a tu archivo stylelogin.css */
+
+/* Sección de reactivar cuenta */
+.reactivate-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+  text-align: center;
+}
+
+.reactivate-text {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.reactivate-link {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  font-size: 14px;
+  text-decoration: underline;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.reactivate-link:hover {
+  color: #0056b3;
+}
+
+/* Descripción en la página de reactivación */
+.reactivate-description {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 20px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Volver al login */
+.back-to-login {
+  margin-top: 20px;
+  text-align: center;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* Mensaje de éxito */
+.success-message {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  border: 1px solid #c3e6cb;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Mejorar el mensaje de error existente */
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  border: 1px solid #f5c6cb;
+  font-size: 14px;
+  text-align: center;
+}

@@ -23,8 +23,11 @@ export const AuthProvider = ({ children }) => {
             const status = userData.status || 'active';
             const role = userData.role || 'user';
             
-            // Si el usuario está inactivo, cerrar sesión automáticamente
-            if (status === 'inactive') {
+            // Verificar si estamos en la página de reactivación
+            const isOnReactivatePage = window.location.pathname === '/reactivate-account';
+            
+            // Si el usuario está inactivo y NO está en la página de reactivación, cerrar sesión
+            if (status === 'inactive' && !isOnReactivatePage) {
               console.log('Usuario inactivo detectado, cerrando sesión...');
               await signOut(auth);
               setUser(null);
@@ -68,7 +71,10 @@ export const AuthProvider = ({ children }) => {
         const userData = userDoc.data();
         const status = userData.status || 'active';
         
-        if (status === 'inactive') {
+        // Solo cerrar sesión si no estamos en la página de reactivación
+        const isOnReactivatePage = window.location.pathname === '/reactivate-account';
+        
+        if (status === 'inactive' && !isOnReactivatePage) {
           await signOut(auth);
           return false;
         }
@@ -83,6 +89,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Función para actualizar el status del usuario desde componentes
+  const updateUserStatus = (newStatus) => {
+    setUserStatus(newStatus);
+  };
+
   const value = {
     user,
     userRole,
@@ -91,6 +102,7 @@ export const AuthProvider = ({ children }) => {
     setUser,
     setUserRole,
     setUserStatus,
+    updateUserStatus,
     checkUserStatus,
     isAdmin: userRole === 'admin',
     isUser: userRole === 'user',
