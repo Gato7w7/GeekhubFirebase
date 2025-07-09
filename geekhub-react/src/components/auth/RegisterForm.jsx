@@ -251,7 +251,7 @@ const RegisterForm = ({ onSuccess }) => {
         <div className="privacy-modal-overlay" onClick={closePrivacyModal}>
           <div className="privacy-modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="privacy-modal-header">
-              <h3>🛡️ Aviso de Privacidad</h3>
+              <h3>Aviso de Privacidad</h3>
               <button 
                 className="privacy-modal-close"
                 onClick={closePrivacyModal}
