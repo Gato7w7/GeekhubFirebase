@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../services/firebase';
+import { useAuthContext } from '../../context/AuthContext';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -11,6 +12,7 @@ const LoginForm = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { checkOnlineStatus, setUserOnline } = useAuthContext();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -34,14 +36,35 @@ const LoginForm = () => {
 
       // Verificar si el usuario está activo
       if (userStatus === 'inactive') {
-        // Cerrar sesión inmediatamente si está inactivo
         await signOut(auth);
         setError('Tu cuenta ha sido desactivada. Contacta al administrador.');
         setLoading(false);
         return;
       }
 
-      // Si el usuario está activo, redirigir según su rol
+      // Verificar si el usuario ya está online (sesión activa)
+      try {
+        const onlineStatus = await checkOnlineStatus(user.uid);
+        if (onlineStatus.isOnline) {
+          await signOut(auth);
+          setError('Esta cuenta ya tiene una sesión activa. Cierra la otra sesión primero.');
+          setLoading(false);
+          return;
+        }
+      } catch (statusError) {
+        console.error('Error verificando estado online:', statusError);
+        // Continuar con el login si hay error verificando el estado
+      }
+
+      // Marcar usuario como online
+      try {
+        await setUserOnline(user.uid);
+      } catch (statusError) {
+        console.error('Error marcando usuario como online:', statusError);
+        // Continuar con el login aunque falle marcar como online
+      }
+
+      // Redirigir según el rol
       if (userRole === 'admin') {
         navigate('/admin');
       } else {

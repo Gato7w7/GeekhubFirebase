@@ -2,7 +2,8 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../services/firebase'; 
+import { auth, db } from '../services/firebase';
+import { userStatusService } from '../services/userStatusService';
 
 const AuthContext = createContext();
 
@@ -29,6 +30,12 @@ export const AuthProvider = ({ children }) => {
             // Si el usuario está inactivo y NO está en la página de reactivación, cerrar sesión
             if (status === 'inactive' && !isOnReactivatePage) {
               console.log('Usuario inactivo detectado, cerrando sesión...');
+              // Marcar como offline antes de cerrar sesión
+              try {
+                await userStatusService.setUserOffline(firebaseUser.uid);
+              } catch (error) {
+                console.error('Error marcando usuario como offline:', error);
+              }
               await signOut(auth);
               setUser(null);
               setUserRole(null);
@@ -75,6 +82,12 @@ export const AuthProvider = ({ children }) => {
         const isOnReactivatePage = window.location.pathname === '/reactivate-account';
         
         if (status === 'inactive' && !isOnReactivatePage) {
+          // Marcar como offline antes de cerrar sesión
+          try {
+            await userStatusService.setUserOffline(user.uid);
+          } catch (error) {
+            console.error('Error marcando usuario como offline:', error);
+          }
           await signOut(auth);
           return false;
         }
@@ -94,6 +107,54 @@ export const AuthProvider = ({ children }) => {
     setUserStatus(newStatus);
   };
 
+  // Función para manejar el cierre de sesión limpiamente
+  const handleSignOut = async () => {
+    if (user?.uid) {
+      try {
+        await userStatusService.setUserOffline(user.uid);
+      } catch (error) {
+        console.error('Error setting user offline:', error);
+      }
+    }
+    await signOut(auth);
+  };
+
+  // Función para verificar estado online del usuario
+  const checkOnlineStatus = async (userId) => {
+    if (!userId) return { isOnline: false };
+    
+    try {
+      return await userStatusService.checkUserOnlineStatus(userId);
+    } catch (error) {
+      console.error('Error checking online status:', error);
+      return { isOnline: false };
+    }
+  };
+
+  // Función para marcar usuario como online
+  const setUserOnline = async (userId) => {
+    if (!userId) return;
+    
+    try {
+      await userStatusService.setUserOnline(userId);
+    } catch (error) {
+      console.error('Error setting user online:', error);
+      throw error;
+    }
+  };
+
+  // Función para marcar usuario como offline
+  const setUserOffline = async (userId) => {
+    if (!userId) return;
+    
+    try {
+      await userStatusService.setUserOffline(userId);
+    } catch (error) {
+      console.error('Error setting user offline:', error);
+      throw error;
+    }
+  };
+
   const value = {
     user,
     userRole,
@@ -104,6 +165,10 @@ export const AuthProvider = ({ children }) => {
     setUserStatus,
     updateUserStatus,
     checkUserStatus,
+    handleSignOut,
+    checkOnlineStatus,
+    setUserOnline,
+    setUserOffline,
     isAdmin: userRole === 'admin',
     isUser: userRole === 'user',
     isActive: userStatus === 'active'

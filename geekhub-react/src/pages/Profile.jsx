@@ -1,18 +1,54 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth, db } from '../services/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useAuthContext } from '../context/AuthContext';
+import { userStatusService } from '../services/userStatusService';
 import '../styles/stylehome.css'; // Reutilizando los estilos del home
 
 export default function Profile() {
-  const { user, userRole } = useAuthContext();
+  const { user, userRole, handleSignOut } = useAuthContext();
   const navigate = useNavigate();
   const [loggingOut, setLoggingOut] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [deactivating, setDeactivating] = useState(false);
+
+  // Referencias para limpiar listeners y heartbeat
+  const cleanupFunctionsRef = useRef([]);
+
+  // Configurar listeners de estado online y heartbeat
+  useEffect(() => {
+    if (user?.uid) {
+      // Configurar heartbeat
+      const cleanupHeartbeat = userStatusService.setupHeartbeat(user.uid);
+      cleanupFunctionsRef.current.push(cleanupHeartbeat);
+
+      // Configurar listener para beforeunload
+      const cleanupBeforeUnload = userStatusService.setupBeforeUnloadListener(user.uid);
+      cleanupFunctionsRef.current.push(cleanupBeforeUnload);
+
+      // Listener para detectar si el usuario se vuelve offline desde otra pestaña
+      const unsubscribeStatus = userStatusService.subscribeToUserStatus(user.uid, (status) => {
+        if (!status.isOnline) {
+          // Si el usuario se marcó como offline, cerrar sesión
+          handleLogout();
+        }
+      });
+      cleanupFunctionsRef.current.push(unsubscribeStatus);
+
+      // Limpiar todo al desmontar el componente
+      return () => {
+        cleanupFunctionsRef.current.forEach(cleanup => {
+          if (typeof cleanup === 'function') {
+            cleanup();
+          }
+        });
+        cleanupFunctionsRef.current = [];
+      };
+    }
+  }, [user?.uid]);
 
   // Obtener datos del usuario desde Firestore
   useEffect(() => {
@@ -35,11 +71,23 @@ export default function Profile() {
   }, [user]);
 
   const handleLogout = async () => {
+    if (loggingOut) return; // Evitar múltiples llamadas
+    
     setLoggingOut(true);
     try {
-      await signOut(auth);
+      // Limpiar listeners antes de cerrar sesión
+      cleanupFunctionsRef.current.forEach(cleanup => {
+        if (typeof cleanup === 'function') {
+          cleanup();
+        }
+      });
+      cleanupFunctionsRef.current = [];
+
+      // Usar la función del contexto que ya maneja el estado offline
+      await handleSignOut();
       navigate('/login');
     } catch (error) {
+      console.error('Error en logout:', error);
       setLoggingOut(false);
     }
   };
@@ -80,8 +128,7 @@ export default function Profile() {
       alert('Cuenta desactivada exitosamente. Serás redirigido al login.');
       
       // Cerrar sesión automáticamente después de desactivar
-      await signOut(auth);
-      navigate('/login');
+      await handleLogout();
       
     } catch (error) {
       console.error('Error al desactivar cuenta:', error);

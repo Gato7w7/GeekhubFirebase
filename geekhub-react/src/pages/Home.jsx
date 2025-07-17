@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signOut } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { useAuthContext } from '../context/AuthContext';
 import { useComments } from '../hooks/useComments';
+import { userStatusService } from '../services/userStatusService';
 import CommentForm from '../components/CommentForm';
 import '../styles/stylehome.css';
 
@@ -13,17 +13,64 @@ export default function Home() {
   const [temaSeleccionado, setTemaSeleccionado] = useState('General');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const { comments, loading, error, refetch } = useComments(temaSeleccionado);
-  const { user, userRole } = useAuthContext();
+  const { user, userRole, handleSignOut } = useAuthContext();
   const navigate = useNavigate();
   const [loggingOut, setLoggingOut] = useState(false);
   const dropdownRef = useRef(null);
 
+  // Referencias para limpiar listeners y heartbeat
+  const cleanupFunctionsRef = useRef([]);
+
+  // Configurar listeners de estado online y heartbeat
+  useEffect(() => {
+    if (user?.uid) {
+      // Configurar heartbeat
+      const cleanupHeartbeat = userStatusService.setupHeartbeat(user.uid);
+      cleanupFunctionsRef.current.push(cleanupHeartbeat);
+
+      // Configurar listener para beforeunload
+      const cleanupBeforeUnload = userStatusService.setupBeforeUnloadListener(user.uid);
+      cleanupFunctionsRef.current.push(cleanupBeforeUnload);
+
+      // Listener para detectar si el usuario se vuelve offline desde otra pestaña
+      const unsubscribeStatus = userStatusService.subscribeToUserStatus(user.uid, (status) => {
+        if (!status.isOnline) {
+          // Si el usuario se marcó como offline, cerrar sesión
+          handleLogout();
+        }
+      });
+      cleanupFunctionsRef.current.push(unsubscribeStatus);
+
+      // Limpiar todo al desmontar el componente
+      return () => {
+        cleanupFunctionsRef.current.forEach(cleanup => {
+          if (typeof cleanup === 'function') {
+            cleanup();
+          }
+        });
+        cleanupFunctionsRef.current = [];
+      };
+    }
+  }, [user?.uid]);
+
   const handleLogout = async () => {
+    if (loggingOut) return; // Evitar múltiples llamadas
+    
     setLoggingOut(true);
     try {
-      await signOut(auth);
+      // Limpiar listeners antes de cerrar sesión
+      cleanupFunctionsRef.current.forEach(cleanup => {
+        if (typeof cleanup === 'function') {
+          cleanup();
+        }
+      });
+      cleanupFunctionsRef.current = [];
+
+      // Usar la función del contexto que ya maneja el estado offline
+      await handleSignOut();
       navigate('/login');
     } catch (error) {
+      console.error('Error en logout:', error);
       setLoggingOut(false);
     }
   };

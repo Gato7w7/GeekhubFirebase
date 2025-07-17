@@ -1,11 +1,11 @@
 // src/pages/AdminDashboard.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { signOut } from 'firebase/auth';
 import { collection, getDocs, doc, setDoc, updateDoc } from 'firebase/firestore';
-//import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '../services/firebase';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
+import { userStatusService } from '../services/userStatusService';
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
@@ -18,9 +18,45 @@ const AdminDashboard = () => {
     role: 'user'
   });
   const [addingUser, setAddingUser] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const navigate = useNavigate();
-  const { user: currentUser } = useAuthContext();
+  const { user: currentUser, handleSignOut } = useAuthContext();
+
+  // Referencias para limpiar listeners y heartbeat
+  const cleanupFunctionsRef = useRef([]);
+
+  // Configurar listeners de estado online y heartbeat (igual que en Home)
+  useEffect(() => {
+    if (currentUser?.uid) {
+      // Configurar heartbeat
+      const cleanupHeartbeat = userStatusService.setupHeartbeat(currentUser.uid);
+      cleanupFunctionsRef.current.push(cleanupHeartbeat);
+
+      // Configurar listener para beforeunload
+      const cleanupBeforeUnload = userStatusService.setupBeforeUnloadListener(currentUser.uid);
+      cleanupFunctionsRef.current.push(cleanupBeforeUnload);
+
+      // Listener para detectar si el usuario se vuelve offline desde otra pestaña
+      const unsubscribeStatus = userStatusService.subscribeToUserStatus(currentUser.uid, (status) => {
+        if (!status.isOnline) {
+          // Si el usuario se marcó como offline, cerrar sesión
+          handleLogout();
+        }
+      });
+      cleanupFunctionsRef.current.push(unsubscribeStatus);
+
+      // Limpiar todo al desmontar el componente
+      return () => {
+        cleanupFunctionsRef.current.forEach(cleanup => {
+          if (typeof cleanup === 'function') {
+            cleanup();
+          }
+        });
+        cleanupFunctionsRef.current = [];
+      };
+    }
+  }, [currentUser?.uid]);
 
   useEffect(() => {
     loadUsers();
@@ -153,12 +189,26 @@ const AdminDashboard = () => {
     }
   };
 
+  // Función de logout actualizada (igual que en Home)
   const handleLogout = async () => {
+    if (loggingOut) return; // Evitar múltiples llamadas
+    
+    setLoggingOut(true);
     try {
-      await signOut(auth);
+      // Limpiar listeners antes de cerrar sesión
+      cleanupFunctionsRef.current.forEach(cleanup => {
+        if (typeof cleanup === 'function') {
+          cleanup();
+        }
+      });
+      cleanupFunctionsRef.current = [];
+
+      // Usar la función del contexto que ya maneja el estado offline
+      await handleSignOut();
       navigate('/login');
-    } catch (err) {
-      console.error('Error en logout:', err);
+    } catch (error) {
+      console.error('Error en logout:', error);
+      setLoggingOut(false);
     }
   };
 
@@ -274,28 +324,33 @@ const AdminDashboard = () => {
             </button>
             <button
               onClick={handleLogout}
+              disabled={loggingOut}
               style={{
                 padding: '10px 20px',
-                backgroundColor: '#dc3545',
+                backgroundColor: loggingOut ? '#6c757d' : '#dc3545',
                 color: '#ffffff',
-                border: '1px solid #dc3545',
+                border: `1px solid ${loggingOut ? '#6c757d' : '#dc3545'}`,
                 borderRadius: '6px',
-                cursor: 'pointer',
+                cursor: loggingOut ? 'not-allowed' : 'pointer',
                 fontSize: '14px',
                 fontWeight: '500',
                 transition: 'all 0.2s ease',
                 minWidth: '100px'
               }}
               onMouseOver={(e) => {
-                e.target.style.backgroundColor = '#c82333';
-                e.target.style.borderColor = '#c82333';
+                if (!loggingOut) {
+                  e.target.style.backgroundColor = '#c82333';
+                  e.target.style.borderColor = '#c82333';
+                }
               }}
               onMouseOut={(e) => {
-                e.target.style.backgroundColor = '#dc3545';
-                e.target.style.borderColor = '#dc3545';
+                if (!loggingOut) {
+                  e.target.style.backgroundColor = '#dc3545';
+                  e.target.style.borderColor = '#dc3545';
+                }
               }}
             >
-              Cerrar Sesión
+              {loggingOut ? 'Cerrando sesión...' : 'Cerrar Sesión'}
             </button>
           </div>
         </div>
