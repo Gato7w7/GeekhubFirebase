@@ -65,11 +65,11 @@ const LoginForm = () => {
       }
 
       // Redirigir según el rol
-      if (userRole === 'admin') {
-        navigate('/admin');
-      } else {
-        navigate('/home');
-      }
+      // if (userRole === 'admin') {
+      //   navigate('/admin');
+      // } else {
+      //   navigate('/home');
+      // }
       
     } catch (err) {
       console.error('Error en login:', err);
