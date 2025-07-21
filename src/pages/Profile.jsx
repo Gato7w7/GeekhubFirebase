@@ -5,7 +5,8 @@ import { auth, db } from '../services/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useAuthContext } from '../context/AuthContext';
 import { userStatusService } from '../services/userStatusService';
-import '../styles/stylehome.css'; // Reutilizando los estilos del home
+import ProfileImageUploader from '../components/ProfileImageUploader';
+import '../styles/profile.css'; // Reutilizando los estilos del home
 
 export default function Profile() {
   const { user, userRole, handleSignOut } = useAuthContext();
@@ -70,9 +71,17 @@ export default function Profile() {
     fetchUserProfile();
   }, [user]);
 
+  // Manejar actualización de imagen de perfil
+  const handleImageUpdate = (newImageUrl) => {
+    setUserProfile(prev => ({
+      ...prev,
+      profileImage: newImageUrl
+    }));
+  };
+
   const handleLogout = async () => {
     if (loggingOut) return; // Evitar múltiples llamadas
-    
+
     setLoggingOut(true);
     try {
       // Limpiar listeners antes de cerrar sesión
@@ -96,21 +105,16 @@ export default function Profile() {
     navigate('/home');
   };
 
-  const handleEditProfile = () => {
-    // Funcionalidad para editar perfil - por implementar
-    console.log('Editar perfil - funcionalidad por implementar');
-  };
-
   const handleDesactivateAccount = async () => {
     // Mostrar confirmación antes de desactivar
     const confirmDeactivate = window.confirm(
       '¿Estás seguro de que quieres desactivar tu cuenta? Esta acción cambiará tu estado a inactivo. Puedes reactivar tu cuenta en cualquier momento desde la pagina de inicio de sesión.'
     );
-    
+
     if (!confirmDeactivate) return;
 
     setDeactivating(true);
-    
+
     try {
       // Actualizar el campo status a "inactive" en Firestore
       const userDocRef = doc(db, 'users', user.uid);
@@ -126,10 +130,10 @@ export default function Profile() {
       }));
 
       alert('Cuenta desactivada exitosamente. Serás redirigido al login.');
-      
+
       // Cerrar sesión automáticamente después de desactivar
       await handleLogout();
-      
+
     } catch (error) {
       console.error('Error al desactivar cuenta:', error);
       alert('Error al desactivar la cuenta. Por favor, intenta de nuevo.');
@@ -174,7 +178,16 @@ export default function Profile() {
         <main className="main-content">
           <section className="comentarios">
             <h2>Mi Perfil</h2>
-            
+            <div className="profile-actions">
+              <button
+                className="logout-btn"
+                onClick={handleDesactivateAccount}
+                disabled={deactivating || userProfile?.status === 'inactive'}
+              >
+                {deactivating ? 'Desactivando...' :
+                  userProfile?.status === 'inactive' ? 'Cuenta Desactivada' : 'Desactivar cuenta'}
+              </button>
+            </div>
             <div className="profile-container">
               {loading ? (
                 <div className="cargando">
@@ -182,54 +195,40 @@ export default function Profile() {
                   <p>Cargando perfil...</p>
                 </div>
               ) : (
-                <div className="profile-card">
+                <div className="profile-content">
+                  <div className="profile-image-section">
+                    <h3>Imagen de perfil</h3>
+                    <ProfileImageUploader
+                      currentImage={userProfile?.profileImage}
+                      onImageUpdate={handleImageUpdate}
+                      disabled={userProfile?.status === 'inactive'}
+                    />
+                  </div>
                   <div className="profile-info">
+                    <h3>Información del perfil</h3>
                     <div className="profile-field">
                       <label>Nombre de Usuario:</label>
                       <span className="profile-value">
                         {userProfile?.displayName || user?.displayName || 'No establecido'}
                       </span>
                     </div>
-                    
+
                     <div className="profile-field">
                       <label>Correo Electrónico:</label>
                       <span className="profile-value">
                         {user?.email || 'No disponible'}
                       </span>
                     </div>
-                    
+
                     <div className="profile-field">
                       <label>Rol:</label>
                       <span className="profile-value">
                         {userRole || 'Usuario'}
                       </span>
                     </div>
-
-                    <div className="profile-field">
-                      <label>Estado:</label>
-                      <span className="profile-value">
-                        {userProfile?.status || 'active'}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="">
-                    <button 
-                      className="logout-btn"
-                      onClick={handleEditProfile}
-                    >
-                      Editar Perfil
-                    </button>
-                    <button 
-                      className="logout-btn"
-                      onClick={handleDesactivateAccount}
-                      disabled={deactivating || userProfile?.status === 'inactive'}
-                    >
-                      {deactivating ? 'Desactivando...' : 
-                       userProfile?.status === 'inactive' ? 'Cuenta Desactivada' : 'Desactivar cuenta'}
-                    </button>
                   </div>
                 </div>
+
               )}
             </div>
           </section>
