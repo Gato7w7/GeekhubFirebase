@@ -1,0 +1,280 @@
+/* Fondo oscuro estilo MongoDB Compass */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background-color: #0c1c1c;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* Contenedor principal de la página de login */
+.login-page-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Wrapper del login centrado */
+.login-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Contenedor del formulario de login */
+.login-container {
+  background-color: #1c2d2d;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+  width: 100%;
+  max-width: 400px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+/* Título de los formularios */
+.login-container h2 {
+  color: #00ffab;
+  margin-bottom: 20px;
+}
+
+/* Inputs */
+.login-container input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: none;
+  border-radius: 8px;
+  background-color: #324b4b;
+  color: #fff;
+  box-sizing: border-box;
+  font-size: 16px;
+}
+
+.login-container input::placeholder {
+  color: #aaa;
+}
+
+/* Botones */
+.login-container button {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: none;
+  border-radius: 8px;
+  background-color: #00ffab;
+  color: #0c1c1c;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-size: 16px;
+}
+
+.login-container button:hover {
+  background-color: #00cc88;
+}
+
+.login-container button:disabled {
+  background-color: #2e4f4f;
+  cursor: not-allowed;
+  color: #ccc;
+}
+
+/* Sección de registro */
+.register-section {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #324b4b;
+}
+
+.register-text {
+  color: #aaa;
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+.register-button {
+  background-color: transparent !important;
+  border: 2px solid #00ffab !important;
+  color: #00ffab !important;
+  padding: 10px 20px !important;
+  margin-bottom: 0 !important;
+}
+
+.register-button:hover {
+  background-color: #00ffab !important;
+  color: #0c1c1c !important;
+}
+
+/* Contenedor de loading */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  color: #00ffab;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #324b4b;
+  border-top: 3px solid #00ffab;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Errores */
+.login-container p.error-message {
+  color: #ff6b6b;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.error-message {
+  color: #ff6b6b;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+/* Título principal (si usas ícono/logo) */
+.titulo-principal {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.logo-icono {
+  width: 40px;
+  height: 40px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .login-page-container {
+    padding: 15px;
+  }
+  
+  .login-container {
+    padding: 30px 25px;
+    max-width: 350px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-page-container {
+    padding: 10px;
+  }
+
+  .login-container {
+    padding: 25px 20px;
+    max-width: 320px;
+  }
+
+  .login-container h2 {
+    font-size: 20px;
+  }
+
+  .login-container input,
+  .login-container button {
+    font-size: 16px;
+    padding: 10px;
+  }
+
+  .register-text {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 360px) {
+  .login-container {
+    padding: 20px 15px;
+  }
+}
+
+/* Agregar estos estilos a tu archivo stylelogin.css */
+
+/* Sección de reactivar cuenta */
+.reactivate-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+  text-align: center;
+}
+
+.reactivate-text {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.reactivate-link {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  font-size: 14px;
+  text-decoration: underline;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.reactivate-link:hover {
+  color: #0056b3;
+}
+
+/* Descripción en la página de reactivación */
+.reactivate-description {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 20px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Volver al login */
+.back-to-login {
+  margin-top: 20px;
+  text-align: center;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* Mensaje de éxito */
+.success-message {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  border: 1px solid #c3e6cb;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Mejorar el mensaje de error existente */
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  border: 1px solid #f5c6cb;
+  font-size: 14px;
+  text-align: center;
+}
