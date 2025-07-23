@@ -1,8 +1,9 @@
 // src/pages/AdminDashboard.jsx
-import React, { useState, useEffect, useRef } from 'react';
-import { signOut } from 'firebase/auth';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+// import { signOut } from 'firebase/auth'; // REMOVIDO - no se usa
 import { collection, getDocs, doc, setDoc, updateDoc } from 'firebase/firestore';
-import { auth, db } from '../services/firebase';
+// import { auth, db } from '../services/firebase'; // CAMBIADO:
+import { db } from '../services/firebase';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
 import { userStatusService } from '../services/userStatusService';
@@ -26,27 +27,41 @@ const AdminDashboard = () => {
   // Referencias para limpiar listeners y heartbeat
   const cleanupFunctionsRef = useRef([]);
 
-  // Configurar listeners de estado online y heartbeat (igual que en Home)
-  useEffect(() => {
-    if (currentUser?.uid) {
-      // Configurar heartbeat
-      const cleanupHeartbeat = userStatusService.setupHeartbeat(currentUser.uid);
-      cleanupFunctionsRef.current.push(cleanupHeartbeat);
-
-      // Configurar listener para beforeunload
-      const cleanupBeforeUnload = userStatusService.setupBeforeUnloadListener(currentUser.uid);
-      cleanupFunctionsRef.current.push(cleanupBeforeUnload);
-
-      // Listener para detectar si el usuario se vuelve offline desde otra pestaña
-      const unsubscribeStatus = userStatusService.subscribeToUserStatus(currentUser.uid, (status) => {
-        if (!status.isOnline) {
-          // Si el usuario se marcó como offline, cerrar sesión
-          handleLogout();
+  // Función handleLogout envuelta en useCallback
+  const handleLogout = useCallback(async () => {
+    if (loggingOut) return;
+    
+    setLoggingOut(true);
+    try {
+      cleanupFunctionsRef.current.forEach(cleanup => {
+        if (typeof cleanup === 'function') {
+          cleanup();
         }
       });
-      cleanupFunctionsRef.current.push(unsubscribeStatus);
+      cleanupFunctionsRef.current = [];
 
-      // Limpiar todo al desmontar el componente
+      await handleSignOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Error en logout:', error);
+      setLoggingOut(false);
+    }
+  }, [loggingOut, handleSignOut, navigate]);
+
+  // Configurar presencia de usuario (SIN el listener problemático)
+  useEffect(() => {
+    if (currentUser?.uid) {
+      // Usar la nueva función que maneja todo sin auto-logout
+      const cleanupPresence = userStatusService.setupUserPresence(currentUser.uid);
+      cleanupFunctionsRef.current.push(cleanupPresence);
+
+      // REMOVIDO: El listener problemático que causaba el auto-logout
+      // const unsubscribeStatus = userStatusService.subscribeToUserStatus(currentUser.uid, (status) => {
+      //   if (!status.isOnline) {
+      //     handleLogout(); // ¡ESTO CAUSABA EL PROBLEMA!
+      //   }
+      // });
+
       return () => {
         cleanupFunctionsRef.current.forEach(cleanup => {
           if (typeof cleanup === 'function') {
@@ -56,7 +71,7 @@ const AdminDashboard = () => {
         cleanupFunctionsRef.current = [];
       };
     }
-  }, [currentUser?.uid]);
+  }, [currentUser?.uid]); // handleLogout ya no es necesario en las dependencias
 
   useEffect(() => {
     loadUsers();
@@ -94,7 +109,6 @@ const AdminDashboard = () => {
         updatedBy: currentUser.uid
       });
 
-      // Actualizar la lista local
       setUsers(users.map(user =>
         user.id === userId ? { ...user, status: newStatus } : user
       ));
@@ -112,12 +126,10 @@ const AdminDashboard = () => {
     setError('');
 
     try {
-      // Validaciones adicionales
       if (!newUser.email || !newUser.displayName) {
         throw new Error('Email y nombre son obligatorios');
       }
 
-      // Verificar si el email ya existe
       const existingUsers = users.filter(user => user.email === newUser.email);
       if (existingUsers.length > 0) {
         throw new Error('Este email ya está registrado');
@@ -125,17 +137,15 @@ const AdminDashboard = () => {
 
       console.log('Creando usuario en Firestore...');
 
-      // Crear un ID temporal para el usuario
       const tempUserId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-      // Agregar datos del usuario a Firestore (sin Auth por ahora)
       const userData = {
         email: newUser.email,
         displayName: newUser.displayName,
         role: newUser.role,
         createdAt: new Date(),
         createdBy: currentUser.uid,
-        status: 'pending' // Estado pendiente hasta que se registre
+        status: 'pending'
       };
 
       console.log('Guardando datos en Firestore...');
@@ -143,10 +153,8 @@ const AdminDashboard = () => {
 
       console.log('Usuario creado exitosamente en Firestore');
 
-      // Actualizar la lista local
       await loadUsers();
 
-      // Limpiar formulario
       setNewUser({
         email: '',
         displayName: '',
@@ -158,7 +166,6 @@ const AdminDashboard = () => {
     } catch (err) {
       console.error('Error detallado al agregar usuario:', err);
 
-      // Manejo específico de errores
       let errorMessage = 'Error al agregar el usuario';
 
       if (err.message) {
@@ -177,7 +184,6 @@ const AdminDashboard = () => {
         role: newRole
       });
 
-      // Actualizar la lista local
       setUsers(users.map(user =>
         user.id === userId ? { ...user, role: newRole } : user
       ));
@@ -186,29 +192,6 @@ const AdminDashboard = () => {
     } catch (err) {
       console.error('Error actualizando rol:', err);
       alert('Error al actualizar el rol');
-    }
-  };
-
-  // Función de logout actualizada (igual que en Home)
-  const handleLogout = async () => {
-    if (loggingOut) return; // Evitar múltiples llamadas
-    
-    setLoggingOut(true);
-    try {
-      // Limpiar listeners antes de cerrar sesión
-      cleanupFunctionsRef.current.forEach(cleanup => {
-        if (typeof cleanup === 'function') {
-          cleanup();
-        }
-      });
-      cleanupFunctionsRef.current = [];
-
-      // Usar la función del contexto que ya maneja el estado offline
-      await handleSignOut();
-      navigate('/login');
-    } catch (error) {
-      console.error('Error en logout:', error);
-      setLoggingOut(false);
     }
   };
 

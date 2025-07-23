@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth } from '../services/firebase';
+// import { auth } from '../services/firebase'; // REMOVIDO - no se usa
 import { useAuthContext } from '../context/AuthContext';
 import { useComments } from '../hooks/useComments';
 import { userStatusService } from '../services/userStatusService';
@@ -21,27 +21,41 @@ export default function Home() {
   // Referencias para limpiar listeners y heartbeat
   const cleanupFunctionsRef = useRef([]);
 
-  // Configurar listeners de estado online y heartbeat
-  useEffect(() => {
-    if (user?.uid) {
-      // Configurar heartbeat
-      const cleanupHeartbeat = userStatusService.setupHeartbeat(user.uid);
-      cleanupFunctionsRef.current.push(cleanupHeartbeat);
+  // Función handleLogout envuelta en useCallback para evitar warnings
+  const handleLogout = useCallback(async () => {
+    if (loggingOut) return;
 
-      // Configurar listener para beforeunload
-      const cleanupBeforeUnload = userStatusService.setupBeforeUnloadListener(user.uid);
-      cleanupFunctionsRef.current.push(cleanupBeforeUnload);
-
-      // Listener para detectar si el usuario se vuelve offline desde otra pestaña
-      const unsubscribeStatus = userStatusService.subscribeToUserStatus(user.uid, (status) => {
-        if (!status.isOnline) {
-          // Si el usuario se marcó como offline, cerrar sesión
-          handleLogout();
+    setLoggingOut(true);
+    try {
+      cleanupFunctionsRef.current.forEach(cleanup => {
+        if (typeof cleanup === 'function') {
+          cleanup();
         }
       });
-      cleanupFunctionsRef.current.push(unsubscribeStatus);
+      cleanupFunctionsRef.current = [];
 
-      // Limpiar todo al desmontar el componente
+      await handleSignOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Error en logout:', error);
+      setLoggingOut(false);
+    }
+  }, [loggingOut, handleSignOut, navigate]);
+
+  // Configurar presencia de usuario (SIN el listener problemático)
+  useEffect(() => {
+    if (user?.uid) {
+      // Usar la nueva función que maneja todo sin auto-logout
+      const cleanupPresence = userStatusService.setupUserPresence(user.uid);
+      cleanupFunctionsRef.current.push(cleanupPresence);
+
+      // REMOVIDO: El listener problemático que causaba el auto-logout
+      // const unsubscribeStatus = userStatusService.subscribeToUserStatus(user.uid, (status) => {
+      //   if (!status.isOnline) {
+      //     handleLogout(); // ¡ESTO CAUSABA EL PROBLEMA!
+      //   }
+      // });
+
       return () => {
         cleanupFunctionsRef.current.forEach(cleanup => {
           if (typeof cleanup === 'function') {
@@ -51,29 +65,7 @@ export default function Home() {
         cleanupFunctionsRef.current = [];
       };
     }
-  }, [user?.uid]);
-
-  const handleLogout = async () => {
-    if (loggingOut) return; // Evitar múltiples llamadas
-    
-    setLoggingOut(true);
-    try {
-      // Limpiar listeners antes de cerrar sesión
-      cleanupFunctionsRef.current.forEach(cleanup => {
-        if (typeof cleanup === 'function') {
-          cleanup();
-        }
-      });
-      cleanupFunctionsRef.current = [];
-
-      // Usar la función del contexto que ya maneja el estado offline
-      await handleSignOut();
-      navigate('/login');
-    } catch (error) {
-      console.error('Error en logout:', error);
-      setLoggingOut(false);
-    }
-  };
+  }, [user?.uid]); // handleLogout ya no es necesario en las dependencias
 
   const handleTemaChange = (tema) => {
     setTemaSeleccionado(tema);
@@ -159,7 +151,7 @@ export default function Home() {
                 ▼
               </span>
             </button>
-            
+
             <div className={`tema-dropdown ${!dropdownOpen ? 'hidden' : ''}`} role="listbox">
               {temasDisponibles.map((tema) => (
                 <div
@@ -175,7 +167,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-
+        
         <main className="main-content">
           <section className="comentarios">
             <h2>Comentarios - {temaSeleccionado}</h2>

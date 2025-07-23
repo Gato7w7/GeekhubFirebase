@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signOut } from 'firebase/auth';
-import { auth, db } from '../services/firebase';
+// import { signOut } from 'firebase/auth'; // REMOVIDO - no se usa
+// import { auth, db } from '../services/firebase'; // CAMBIADO:
+import { db } from '../services/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useAuthContext } from '../context/AuthContext';
 import { userStatusService } from '../services/userStatusService';
 import ProfileImageUploader from '../components/ProfileImageUploader';
-import '../styles/profile.css'; // Reutilizando los estilos del home
+import '../styles/profile.css';
 
 export default function Profile() {
   const { user, userRole, handleSignOut } = useAuthContext();
@@ -19,27 +20,41 @@ export default function Profile() {
   // Referencias para limpiar listeners y heartbeat
   const cleanupFunctionsRef = useRef([]);
 
-  // Configurar listeners de estado online y heartbeat
-  useEffect(() => {
-    if (user?.uid) {
-      // Configurar heartbeat
-      const cleanupHeartbeat = userStatusService.setupHeartbeat(user.uid);
-      cleanupFunctionsRef.current.push(cleanupHeartbeat);
+  // Función handleLogout envuelta en useCallback
+  const handleLogout = useCallback(async () => {
+    if (loggingOut) return;
 
-      // Configurar listener para beforeunload
-      const cleanupBeforeUnload = userStatusService.setupBeforeUnloadListener(user.uid);
-      cleanupFunctionsRef.current.push(cleanupBeforeUnload);
-
-      // Listener para detectar si el usuario se vuelve offline desde otra pestaña
-      const unsubscribeStatus = userStatusService.subscribeToUserStatus(user.uid, (status) => {
-        if (!status.isOnline) {
-          // Si el usuario se marcó como offline, cerrar sesión
-          handleLogout();
+    setLoggingOut(true);
+    try {
+      cleanupFunctionsRef.current.forEach(cleanup => {
+        if (typeof cleanup === 'function') {
+          cleanup();
         }
       });
-      cleanupFunctionsRef.current.push(unsubscribeStatus);
+      cleanupFunctionsRef.current = [];
 
-      // Limpiar todo al desmontar el componente
+      await handleSignOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Error en logout:', error);
+      setLoggingOut(false);
+    }
+  }, [loggingOut, handleSignOut, navigate]);
+
+  // Configurar presencia de usuario (SIN el listener problemático)
+  useEffect(() => {
+    if (user?.uid) {
+      // Usar la nueva función que maneja todo sin auto-logout
+      const cleanupPresence = userStatusService.setupUserPresence(user.uid);
+      cleanupFunctionsRef.current.push(cleanupPresence);
+
+      // REMOVIDO: El listener problemático que causaba el auto-logout
+      // const unsubscribeStatus = userStatusService.subscribeToUserStatus(user.uid, (status) => {
+      //   if (!status.isOnline) {
+      //     handleLogout(); // ¡ESTO CAUSABA EL PROBLEMA!
+      //   }
+      // });
+
       return () => {
         cleanupFunctionsRef.current.forEach(cleanup => {
           if (typeof cleanup === 'function') {
@@ -49,7 +64,7 @@ export default function Profile() {
         cleanupFunctionsRef.current = [];
       };
     }
-  }, [user?.uid]);
+  }, [user?.uid]); // handleLogout ya no es necesario en las dependencias
 
   // Obtener datos del usuario desde Firestore
   useEffect(() => {
@@ -79,34 +94,11 @@ export default function Profile() {
     }));
   };
 
-  const handleLogout = async () => {
-    if (loggingOut) return; // Evitar múltiples llamadas
-
-    setLoggingOut(true);
-    try {
-      // Limpiar listeners antes de cerrar sesión
-      cleanupFunctionsRef.current.forEach(cleanup => {
-        if (typeof cleanup === 'function') {
-          cleanup();
-        }
-      });
-      cleanupFunctionsRef.current = [];
-
-      // Usar la función del contexto que ya maneja el estado offline
-      await handleSignOut();
-      navigate('/login');
-    } catch (error) {
-      console.error('Error en logout:', error);
-      setLoggingOut(false);
-    }
-  };
-
   const handleGoHome = () => {
     navigate('/home');
   };
 
   const handleDesactivateAccount = async () => {
-    // Mostrar confirmación antes de desactivar
     const confirmDeactivate = window.confirm(
       '¿Estás seguro de que quieres desactivar tu cuenta? Esta acción cambiará tu estado a inactivo. Puedes reactivar tu cuenta en cualquier momento desde la pagina de inicio de sesión.'
     );
@@ -116,22 +108,18 @@ export default function Profile() {
     setDeactivating(true);
 
     try {
-      // Actualizar el campo status a "inactive" en Firestore
       const userDocRef = doc(db, 'users', user.uid);
       await updateDoc(userDocRef, {
         status: 'inactive',
-        deactivatedAt: new Date().toISOString() // Opcional: guardar fecha de desactivación
+        deactivatedAt: new Date().toISOString()
       });
 
-      // Actualizar el estado local
       setUserProfile(prev => ({
         ...prev,
         status: 'inactive'
       }));
 
       alert('Cuenta desactivada exitosamente. Serás redirigido al login.');
-
-      // Cerrar sesión automáticamente después de desactivar
       await handleLogout();
 
     } catch (error) {
@@ -228,7 +216,6 @@ export default function Profile() {
                     </div>
                   </div>
                 </div>
-
               )}
             </div>
           </section>
