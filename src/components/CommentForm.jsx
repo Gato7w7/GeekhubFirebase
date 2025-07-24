@@ -35,8 +35,19 @@ const CommentForm = ({ temaSeleccionado, onCommentAdded }) => {
       setTexto('');
       if (onCommentAdded) onCommentAdded(); // recargar comentarios
     } catch (err) {
-      setError('No se pudo enviar el comentario.');
-      console.error(err);
+      console.error('Error al enviar comentario:', err);
+      
+      // Manejar el error especial cuando el usuario cancela por contenido inapropiado
+      if (err.message === 'CANCELLED_BY_USER') {
+        // El usuario canceló voluntariamente, no mostrar error
+        setError('');
+      } else if (err.code === 'permission-denied') {
+        setError('No tienes permisos para enviar comentarios.');
+      } else if (err.code === 'network-request-failed') {
+        setError('Error de conexión. Verifica tu internet.');
+      } else {
+        setError('No se pudo enviar el comentario.');
+      }
     } finally {
       setEnviando(false);
     }

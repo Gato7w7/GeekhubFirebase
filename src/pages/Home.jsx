@@ -167,7 +167,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-        
+
         <main className="main-content">
           <section className="comentarios">
             <h2>Comentarios - {temaSeleccionado}</h2>

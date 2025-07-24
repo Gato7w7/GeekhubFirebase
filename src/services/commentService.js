@@ -2,6 +2,43 @@
 import { collection, query, where, orderBy, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 
+// Función para censurar texto usando la API
+const censureBadWords = async (text) => {
+  try {
+    const response = await fetch('https://shelver.vercel.app/api/badwords', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text: text })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Error en la API de censura');
+    }
+    
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Error censurando texto:', error);
+    // Si falla la API, devolver el texto original sin censura
+    return { 
+      censored: text, 
+      hasProfanity: false, 
+      error: true 
+    };
+  }
+};
+
+// Función para mostrar confirmación si hay groserías
+const confirmProfanitySubmission = () => {
+  return window.confirm(
+    '⚠️ Tu comentario contiene palabras inapropiadas.\n\n' +
+    'Si continúas, el comentario se publicará pero las palabras ofensivas serán censuradas con asteriscos (*).\n\n' +
+    '¿Deseas continuar?'
+  );
+};
+
 // Función para validar y limpiar un comentario
 const validateAndCleanComment = (comment) => {
   if (!comment || typeof comment !== 'object') return null;
@@ -51,17 +88,37 @@ export const getCommentsByTopic = async (tema) => {
   }
 };
 
+// Nueva función para agregar comentarios con censura
 export const addComment = async ({ texto, usuario, tema }) => {
   try {
+    // 1. Verificar si el texto contiene groserías
+    const censorResult = await censureBadWords(texto);
+    
+    // 2. Si hay groserías y no hay error de API
+    if (censorResult.hasProfanity && !censorResult.error) {
+      // Mostrar confirmación al usuario
+      const userConfirmed = confirmProfanitySubmission();
+      
+      // Si el usuario cancela, no enviar el comentario
+      if (!userConfirmed) {
+        throw new Error('CANCELLED_BY_USER'); // Error especial para manejar cancelación
+      }
+    }
+    
+    // 3. Usar el texto censurado (o original si no hay groserías o hay error)
+    const finalText = censorResult.error ? texto : (censorResult.censored || texto);
+    
+    // 4. Guardar el comentario en Firebase
     const docRef = await addDoc(collection(db, 'comentarios'), {
-      texto,
+      texto: finalText,
       usuario,
       tema,
       fecha: serverTimestamp()
     });
+    
     return docRef.id;
   } catch (error) {
-    console.error('Error al agregar comentario:', error);
+    // Re-lanzar el error para que el componente lo maneje
     throw error;
   }
 };
