@@ -1,18 +1,18 @@
 // src/components/auth/LoginForm.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../services/firebase';
 import { useAuthContext } from '../../context/AuthContext';
+import PasswordResetModal from './PasswordResetModal';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [resetEmailSent, setResetEmailSent] = useState(false);
-  const [resetLoading, setResetLoading] = useState(false);
+  const [isPasswordResetModalOpen, setIsPasswordResetModalOpen] = useState(false);
   const navigate = useNavigate();
   const { checkOnlineStatus, setUserOnline } = useAuthContext();
 
@@ -99,37 +99,12 @@ const LoginForm = () => {
     }
   };
 
-  const handlePasswordReset = async () => {
-    if (!email) {
-      setError('Por favor ingresa tu email primero');
-      return;
-    }
+  const openPasswordResetModal = () => {
+    setIsPasswordResetModalOpen(true);
+  };
 
-    setResetLoading(true);
-    setError('');
-    setResetEmailSent(false);
-
-    try {
-      await sendPasswordResetEmail(auth, email);
-      setResetEmailSent(true);
-      setError('');
-    } catch (err) {
-      console.error('Error enviando email de recuperación:', err);
-      
-      let errorMessage = 'Error enviando el correo de recuperación';
-      
-      if (err.code === 'auth/user-not-found') {
-        errorMessage = 'No existe una cuenta con este email';
-      } else if (err.code === 'auth/invalid-email') {
-        errorMessage = 'Email inválido';
-      } else if (err.code === 'auth/too-many-requests') {
-        errorMessage = 'Demasiadas solicitudes. Intenta más tarde';
-      }
-      
-      setError(errorMessage);
-    } finally {
-      setResetLoading(false);
-    }
+  const closePasswordResetModal = () => {
+    setIsPasswordResetModalOpen(false);
   };
 
   return (
@@ -166,29 +141,28 @@ const LoginForm = () => {
           {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
         </button>
         
-        {/* Botón para recuperar contraseña */}
-        <button 
-          type="button" 
-          className="forgot-password-button"
-          onClick={handlePasswordReset}
-          disabled={resetLoading || !email}
-        >
-          {resetLoading ? 'Enviando...' : '¿Olvidaste tu contraseña?'}
-        </button>
+        {/* Enlace para recuperar contraseña */}
+        <div className="forgot-password-section">
+          <span 
+            className="forgot-password-link"
+            onClick={openPasswordResetModal}
+          >
+            ¿Olvidaste tu contraseña?
+          </span>
+        </div>
         
         {error && (
           <p className="error-message">
             {error}
           </p>
         )}
-        
-        {resetEmailSent && (
-          <p className="success-message">
-            Se ha enviado un correo de recuperación a {email}. 
-            Revisa tu bandeja de entrada y spam.
-          </p>
-        )}
       </form>
+      
+      {/* Modal de recuperación de contraseña */}
+      <PasswordResetModal
+        isOpen={isPasswordResetModalOpen}
+        onClose={closePasswordResetModal}
+      />
     </div>
   );
 };

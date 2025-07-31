@@ -49,31 +49,31 @@ const LoginPage = () => {
           <LoginForm />
           <div className="register-section">
             <p className="register-text">¿No tienes una cuenta?</p>
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="register-button"
               onClick={openRegisterModal}
             >
               Registrarse
             </button>
           </div>
-          
-          <div className="reactivate-section">
-            <p className="reactivate-text">¿Desactivaste tu cuenta?</p>
-            <button 
-              type="button" 
-              className="reactivate-link"
-              onClick={handleReactivateAccount}
-            >
-              Reactivar cuenta
-            </button>
-          </div>
+        </div>
+        
+        {/* Opción de reactivar cuenta debajo del contenedor principal */}
+        <div className="reactivate-section-below">
+          <button
+            type="button"
+            className="reactivate-button-below"
+            onClick={handleReactivateAccount}
+          >
+            ¿Desactivaste tu cuenta? Reactivar aquí
+          </button>
         </div>
       </div>
-
-      <RegisterModal 
-        isOpen={isRegisterModalOpen} 
-        onClose={closeRegisterModal} 
+      
+      <RegisterModal
+        isOpen={isRegisterModalOpen}
+        onClose={closeRegisterModal}
       />
     </div>
   );
