@@ -6,7 +6,8 @@
   margin: 0;
   padding: 1rem;
   box-sizing: border-box;
-  min-height: calc(100vh - 80px); /* Asumiendo header de 80px */
+  min-height: auto;
+  overflow-y: auto;
 }
 
 .profile-card {
@@ -23,10 +24,10 @@
   flex-direction: column;
   gap: 2rem;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   width: 100%;
   box-sizing: border-box;
-  min-height: calc(100vh - 120px);
+  min-height: auto;
 }
 
 .profile-card::before {
@@ -41,15 +42,14 @@
 
 /* ===== LAYOUT PRINCIPAL ===== */
 .profile-content {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 3rem;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: stretch;
   width: 100%;
 }
 
 /* ===== SECCIÓN DE IMAGEN DE PERFIL ===== */
-
 .profile-image-section {
   display: flex;
   flex-direction: column;
@@ -60,7 +60,8 @@
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
-  height: fit-content;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .profile-image-section h3 {
@@ -78,17 +79,19 @@
   align-items: center;
   gap: 1.5rem;
   width: 100%;
+  max-width: 300px;
 }
 
 .profile-image-container {
   position: relative;
   display: flex;
   justify-content: center;
+  width: 100%;
 }
 
 .profile-image-wrapper {
-  width: 200px;
-  height: 200px;
+  width: 180px;
+  height: 180px;
   border-radius: 50%;
   overflow: hidden;
   border: 3px solid #00ed64;
@@ -97,6 +100,7 @@
     0 0 40px rgba(0, 237, 100, 0.2);
   transition: all 0.3s ease;
   position: relative;
+  flex-shrink: 0;
 }
 
 .profile-image-wrapper::before {
@@ -147,10 +151,12 @@
   font-size: 1rem;
   font-weight: 500;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  padding: 1rem;
+  box-sizing: border-box;
 }
 
 /* ===== CONTROLES DE IMAGEN ===== */
-
 .profile-image-controls {
   display: flex;
   flex-direction: column;
@@ -171,6 +177,7 @@
   overflow: hidden;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .profile-image-controls button::before {
@@ -232,21 +239,20 @@
 }
 
 /* ===== INFORMACIÓN DEL PERFIL ===== */
-
 .profile-info {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
   width: 100%;
-  height: fit-content;
 }
 
 .profile-info h3 {
   color: #00ed64;
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 1rem 0;
   font-size: 1.5rem;
   font-weight: 600;
   text-shadow: 0 0 10px rgba(0, 237, 100, 0.3);
+  text-align: center;
 }
 
 .profile-field {
@@ -258,6 +264,8 @@
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.05);
   transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .profile-field:hover {
@@ -289,6 +297,8 @@
   margin: 0;
   font-weight: 500;
   line-height: 1.4;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .profile-value:focus {
@@ -298,13 +308,13 @@
 }
 
 /* ===== ACCIONES DEL PERFIL ===== */
-
 .profile-actions {
   display: flex;
   justify-content: center;
   gap: 1rem;
-  margin: 2rem 0;
+  margin: 1.5rem 0;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 .profile-actions .logout-btn {
@@ -323,6 +333,7 @@
   position: relative;
   overflow: hidden;
   min-width: 200px;
+  white-space: nowrap;
 }
 
 .profile-actions .logout-btn::before {
@@ -353,10 +364,10 @@
 }
 
 /* ===== INFORMACIÓN ADICIONAL ===== */
-
 .upload-info {
   text-align: center;
   margin-top: 1rem;
+  width: 100%;
 }
 
 .upload-info small {
@@ -364,10 +375,11 @@
   font-size: 0.8rem;
   line-height: 1.5;
   opacity: 0.9;
+  display: block;
+  word-wrap: break-word;
 }
 
 /* ===== CONTROLES DE PREVIEW ===== */
-
 .preview-controls, .normal-controls {
   display: flex;
   flex-direction: column;
@@ -381,33 +393,59 @@
 
 /* ===== RESPONSIVE DESIGN ===== */
 
-/* Tablets */
-@media (max-width: 1024px) {
+/* Escritorio grande */
+@media (min-width: 1200px) {
   .profile-content {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 3rem;
+    align-items: start;
+  }
+  
+  .profile-info h3 {
+    text-align: left;
+  }
+}
+
+/* Tablets grandes */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .profile-content {
+    display: grid;
     grid-template-columns: 1fr;
-    gap: 2rem;
+    gap: 2.5rem;
   }
   
   .profile-image-section {
     order: -1;
   }
+  
+  .profile-image-wrapper {
+    width: 200px;
+    height: 200px;
+  }
 }
 
 /* Tablets pequeños */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .profile-container {
     padding: 0.75rem;
+    min-height: auto;
   }
 
   .profile-card {
     padding: 1.5rem;
     gap: 1.5rem;
-    min-height: calc(100vh - 100px);
+    min-height: auto;
+    border-radius: 12px;
+  }
+
+  .profile-content {
+    gap: 2rem;
   }
 
   .profile-image-wrapper {
-    width: 150px;
-    height: 150px;
+    width: 160px;
+    height: 160px;
   }
 
   .profile-image-section {
@@ -452,18 +490,25 @@
 @media (max-width: 480px) {
   .profile-container {
     padding: 0.5rem;
+    min-height: auto;
+    overflow-y: visible;
   }
 
   .profile-card {
     padding: 1rem;
     gap: 1.25rem;
-    border-radius: 12px;
-    min-height: calc(100vh - 80px);
+    border-radius: 8px;
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .profile-content {
+    gap: 1.5rem;
   }
 
   .profile-image-wrapper {
-    width: 120px;
-    height: 120px;
+    width: 140px;
+    height: 140px;
     border-width: 2px;
   }
 
@@ -474,6 +519,10 @@
 
   .profile-image-section h3 {
     font-size: 1.125rem;
+  }
+
+  .profile-image-uploader {
+    max-width: 100%;
   }
 
   .profile-image-controls {
@@ -487,7 +536,7 @@
   }
 
   .profile-info {
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
 
   .profile-info h3 {
@@ -514,7 +563,7 @@
   .profile-actions .logout-btn {
     padding: 0.75rem 1.5rem;
     font-size: 0.8125rem;
-    min-width: 160px;
+    min-width: 150px;
   }
 
   .upload-info small {
@@ -524,13 +573,24 @@
 
 /* Móviles muy pequeños */
 @media (max-width: 360px) {
+  .profile-container {
+    padding: 0.25rem;
+    min-height: auto;
+  }
+
   .profile-card {
     padding: 0.875rem;
+    gap: 1rem;
+    min-height: auto;
   }
 
   .profile-image-wrapper {
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
+  }
+
+  .profile-image-section {
+    padding: 1rem;
   }
 
   .profile-image-section h3 {
@@ -542,12 +602,17 @@
     font-size: 0.75rem;
   }
 
+  .profile-field {
+    padding: 0.875rem;
+  }
+
   .profile-field label {
     font-size: 0.6875rem;
   }
 
   .profile-value {
     font-size: 0.875rem;
+    padding: 0.625rem;
   }
 
   .upload-info small {
@@ -555,7 +620,7 @@
   }
 
   .profile-actions .logout-btn {
-    min-width: 140px;
+    min-width: 130px;
     padding: 0.625rem 1.25rem;
     font-size: 0.75rem;
   }
@@ -601,23 +666,23 @@
 }
 
 /* ===== ESTADOS DE CARGA ===== */
-
 .cargando {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 1.5rem;
-  padding: 4rem 2rem;
+  padding: 2rem 1rem;
   color: #e0f7e9;
   min-height: 300px;
+  text-align: center;
 }
 
 .spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(0, 237, 100, 0.3);
-  border-top: 4px solid #00ed64;
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(0, 237, 100, 0.3);
+  border-top: 3px solid #00ed64;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -628,7 +693,7 @@
 }
 
 .cargando p {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 500;
   margin: 0;
   text-align: center;
@@ -636,19 +701,82 @@
 
 /* ===== SCROLLBAR GLOBAL ===== */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
   background: #1e2e24;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb {
   background: #00ed64;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #00d65e;
+}
+
+/* ===== MEJORAS ADICIONALES ===== */
+
+/* Evitar overflow horizontal */
+* {
+  box-sizing: border-box;
+}
+
+/* Permitir scroll natural en el body */
+body {
+  overflow-x: hidden;
+  overflow-y: auto;  
+}
+
+/* Asegurar que el contenedor principal pueda hacer scroll */
+.home-container {
+  min-height: 100vh;
+  overflow-y: auto;
+}
+
+.main-container {
+  min-height: calc(100vh - 80px);
+  overflow-y: auto;
+}
+
+.main-content {
+  min-height: auto;
+  overflow: visible;
+}
+
+.profile-container,
+.profile-card,
+.profile-content,
+.profile-image-section,
+.profile-info {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Asegurar que los textos largos se ajusten */
+.profile-value,
+.profile-field label,
+.upload-info small {
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* Mejorar la legibilidad en pantallas pequeñas */
+@media (max-width: 480px) {
+  .profile-field label {
+    line-height: 1.4;
+  }
+  
+  .profile-value {
+    line-height: 1.5;
+  }
+  
+  /* Asegurar que todo el contenido sea visible */
+  .comentarios {
+    min-height: auto;
+    padding-bottom: 2rem;
+  }
 }
