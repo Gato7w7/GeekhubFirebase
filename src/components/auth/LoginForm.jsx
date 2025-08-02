@@ -10,6 +10,7 @@ import PasswordResetModal from './PasswordResetModal';
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isPasswordResetModalOpen, setIsPasswordResetModalOpen] = useState(false);
@@ -20,23 +21,21 @@ const LoginForm = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    
+
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      
-      // Verificar datos del usuario en Firestore
+
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       let userRole = 'user';
       let userStatus = 'active';
-      
+
       if (userDoc.exists()) {
         const userData = userDoc.data();
         userRole = userData.role || 'user';
         userStatus = userData.status || 'active';
       }
 
-      // Verificar si el usuario está activo
       if (userStatus === 'inactive') {
         await signOut(auth);
         setError('Tu cuenta ha sido desactivada. Contacta al administrador.');
@@ -44,7 +43,6 @@ const LoginForm = () => {
         return;
       }
 
-      // Verificar si el usuario ya está online (sesión activa)
       try {
         const onlineStatus = await checkOnlineStatus(user.uid);
         if (onlineStatus.isOnline) {
@@ -55,30 +53,25 @@ const LoginForm = () => {
         }
       } catch (statusError) {
         console.error('Error verificando estado online:', statusError);
-        // Continuar con el login si hay error verificando el estado
       }
 
-      // Marcar usuario como online
       try {
         await setUserOnline(user.uid);
       } catch (statusError) {
         console.error('Error marcando usuario como online:', statusError);
-        // Continuar con el login aunque falle marcar como online
       }
 
-      // Redirigir según el rol
+      // Redirección comentada
       // if (userRole === 'admin') {
       //   navigate('/admin');
       // } else {
       //   navigate('/home');
       // }
-      
+
     } catch (err) {
       console.error('Error en login:', err);
-      
-      // Manejar diferentes tipos de errores
       let errorMessage = 'Error en el login';
-      
+
       if (err.code === 'auth/user-not-found') {
         errorMessage = 'No existe una cuenta con este email';
       } else if (err.code === 'auth/wrong-password') {
@@ -92,7 +85,7 @@ const LoginForm = () => {
       } else {
         errorMessage = 'Credenciales inválidas o error en el login';
       }
-      
+
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -107,58 +100,82 @@ const LoginForm = () => {
     setIsPasswordResetModalOpen(false);
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   return (
     <div className="login-container">
       <form onSubmit={handleLogin}>
         <h2>Iniciar sesión</h2>
-        
-        <div>
-          <input 
-            type="email" 
-            placeholder="Email" 
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)} 
-            required 
+
+        <div className="input-group">
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
             disabled={loading}
           />
         </div>
-        
-        <div>
-          <input 
-            type="password" 
-            placeholder="Contraseña" 
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
-            required 
+
+        <div className="input-group password-input-group">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
             disabled={loading}
+            className="password-input"
           />
+          <button
+            type="button"
+            className="password-toggle-btn"
+            onClick={togglePasswordVisibility}
+            disabled={loading}
+            aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+          >
+            {showPassword ? (
+              // Ojo cerrado (ocultar)
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            ) : (
+              // Ojo abierto (mostrar)
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            )}
+          </button>
         </div>
-        
-        <button 
-          type="submit" 
+
+        <button
+          type="submit"
           disabled={loading}
         >
           {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
         </button>
-        
-        {/* Enlace para recuperar contraseña */}
+
         <div className="forgot-password-section">
-          <span 
+          <span
             className="forgot-password-link"
             onClick={openPasswordResetModal}
           >
             ¿Olvidaste tu contraseña?
           </span>
         </div>
-        
+
         {error && (
           <p className="error-message">
             {error}
           </p>
         )}
       </form>
-      
-      {/* Modal de recuperación de contraseña */}
+
       <PasswordResetModal
         isOpen={isPasswordResetModalOpen}
         onClose={closePasswordResetModal}

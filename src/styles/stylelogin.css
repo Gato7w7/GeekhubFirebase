@@ -45,11 +45,16 @@ body {
   margin-bottom: 20px;
 }
 
+/* Input groups */
+.input-group {
+  position: relative;
+  margin-bottom: 15px;
+}
+
 /* Inputs */
 .login-container input {
   width: 100%;
   padding: 12px;
-  margin-bottom: 15px;
   border: none;
   border-radius: 8px;
   background-color: #324b4b;
@@ -60,6 +65,52 @@ body {
 
 .login-container input::placeholder {
   color: #aaa;
+}
+
+/* Contenedor específico para input de contraseña */
+.password-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Input de contraseña con espacio para el botón */
+.password-input {
+  padding-right: 45px !important; /* Espacio para el botón del ojo */
+}
+
+/* Botón toggle de contraseña */
+.password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #aaa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s ease;
+  z-index: 1;
+  width: auto;
+  margin: 0;
+}
+
+.password-toggle-btn:hover {
+  color: #00ffab;
+}
+
+.password-toggle-btn:disabled {
+  cursor: not-allowed;
+  color: #666;
+}
+
+.password-toggle-btn svg {
+  width: 20px;
+  height: 20px;
 }
 
 /* Botones */
@@ -85,6 +136,25 @@ body {
   background-color: #2e4f4f;
   cursor: not-allowed;
   color: #ccc;
+}
+
+/* Excluir el botón toggle del estilo general de botones */
+.login-container .password-toggle-btn {
+  background: none !important;
+  color: #aaa !important;
+  width: auto !important;
+  padding: 4px !important;
+  margin: 0 !important;
+}
+
+.login-container .password-toggle-btn:hover {
+  background: none !important;
+  color: #00ffab !important;
+}
+
+.login-container .password-toggle-btn:disabled {
+  background: none !important;
+  color: #666 !important;
 }
 
 /* Sección de registro */
@@ -164,121 +234,6 @@ body {
   height: 40px;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .login-page-container {
-    padding: 15px;
-  }
-  
-  .login-container {
-    padding: 30px 25px;
-    max-width: 350px;
-  }
-}
-
-@media (max-width: 480px) {
-  .login-page-container {
-    padding: 10px;
-  }
-
-  .login-container {
-    padding: 25px 20px;
-    max-width: 320px;
-  }
-
-  .login-container h2 {
-    font-size: 20px;
-  }
-
-  .login-container input,
-  .login-container button {
-    font-size: 16px;
-    padding: 10px;
-  }
-
-  .register-text {
-    font-size: 13px;
-  }
-}
-
-@media (max-width: 360px) {
-  .login-container {
-    padding: 20px 15px;
-  }
-}
-
-/* Agregar estos estilos a tu archivo stylelogin.css */
-
-/* Sección de reactivar cuenta */
-.reactivate-section {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #e0e0e0;
-  text-align: center;
-}
-
-.reactivate-text {
-  color: #666;
-  font-size: 14px;
-  margin-bottom: 10px;
-}
-
-.reactivate-link {
-  background: none;
-  border: none;
-  color: #007bff;
-  cursor: pointer;
-  font-size: 14px;
-  text-decoration: underline;
-  padding: 0;
-  transition: color 0.2s ease;
-}
-
-.reactivate-link:hover {
-  color: #0056b3;
-}
-
-/* Descripción en la página de reactivación */
-.reactivate-description {
-  color: #666;
-  font-size: 14px;
-  margin-bottom: 20px;
-  text-align: center;
-  line-height: 1.4;
-}
-
-/* Volver al login */
-.back-to-login {
-  margin-top: 20px;
-  text-align: center;
-  padding-top: 20px;
-  border-top: 1px solid #e0e0e0;
-}
-
-/* Mensaje de éxito */
-.success-message {
-  background-color: #d4edda;
-  color: #155724;
-  padding: 10px;
-  border-radius: 4px;
-  margin-bottom: 15px;
-  border: 1px solid #c3e6cb;
-  font-size: 14px;
-  text-align: center;
-}
-
-/* Mejorar el mensaje de error existente */
-.error-message {
-  background-color: #f8d7da;
-  color: #721c24;
-  padding: 10px;
-  border-radius: 4px;
-  margin-bottom: 15px;
-  border: 1px solid #f5c6cb;
-  font-size: 14px;
-  text-align: center;
-}
-
 /* Sección para enlace de recuperar contraseña */
 .forgot-password-section {
   text-align: center;
@@ -331,7 +286,58 @@ body {
   background-color: rgba(0, 255, 171, 0.1);
 }
 
-/* Estilos del modal - tema oscuro */
+/* Responsive */
+@media (max-width: 768px) {
+  .login-page-container {
+    padding: 15px;
+  }
+  
+  .login-container {
+    padding: 30px 25px;
+    max-width: 350px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-page-container {
+    padding: 10px;
+  }
+
+  .login-container {
+    padding: 25px 20px;
+    max-width: 320px;
+  }
+
+  .login-container h2 {
+    font-size: 20px;
+  }
+
+  .login-container input,
+  .login-container button {
+    font-size: 16px;
+    padding: 10px;
+  }
+
+  .password-input {
+    padding-right: 40px !important;
+  }
+
+  .password-toggle-btn {
+    right: 10px;
+  }
+
+  .register-text {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 360px) {
+  .login-container {
+    padding: 20px 15px;
+  }
+}
+
+/* Resto de estilos del modal y otros elementos permanecen igual... */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -479,7 +485,6 @@ body {
   border-color: #2e4f4f;
 }
 
-/* Contenido de éxito - tema oscuro */
 .success-content {
   text-align: center;
 }
@@ -528,7 +533,6 @@ body {
   background: #00cc88;
 }
 
-/* Mensaje de error en modal - tema oscuro */
 .modal-body .error-message {
   background-color: rgba(255, 107, 107, 0.2);
   color: #ff6b6b;
@@ -537,4 +541,59 @@ body {
   padding: 10px;
   margin-top: 10px;
   font-size: 14px;
+}
+
+/* Sección de reactivar cuenta */
+.reactivate-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+  text-align: center;
+}
+
+.reactivate-text {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.reactivate-link {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  font-size: 14px;
+  text-decoration: underline;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.reactivate-link:hover {
+  color: #0056b3;
+}
+
+.reactivate-description {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 20px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.back-to-login {
+  margin-top: 20px;
+  text-align: center;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.success-message {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  border: 1px solid #c3e6cb;
+  font-size: 14px;
+  text-align: center;
 }
