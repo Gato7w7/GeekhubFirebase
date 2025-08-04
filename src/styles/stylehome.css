@@ -715,3 +715,170 @@ html, body {
     max-height: 80px;
   }
 }
+
+/* Agregar estas clases al final de tu stylehome.css existente */
+
+/* Estilos para avatares en comentarios */
+.comentario-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.comentario-user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0; /* Para permitir que el texto se corte si es necesario */
+}
+
+.comentario-user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.usuario {
+  color: #00ed64;
+  font-weight: bold;
+  font-size: clamp(12px, 2.5vw, 14px);
+  word-break: break-word;
+}
+
+.usuario-email {
+  color: #a5d8c7;
+  font-size: clamp(10px, 2vw, 11px);
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.fecha {
+  color: #a5d8c7;
+  font-style: italic;
+  font-size: clamp(10px, 2vw, 12px);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Avatar en el header */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Indicador de carga de perfiles */
+.loading-profiles {
+  text-align: center;
+  padding: 8px;
+  background-color: rgba(0, 237, 100, 0.1);
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+.loading-profiles small {
+  color: #00ed64;
+  font-size: clamp(10px, 2vw, 12px);
+}
+
+/* MEDIA QUERIES RESPONSIVE para avatares */
+
+/* Tablets */
+@media (max-width: 768px) {
+  .comentario-user-info {
+    gap: 8px;
+  }
+  
+  .comentario-header {
+    gap: 8px;
+  }
+  
+  .header-right {
+    gap: 10px;
+  }
+}
+
+/* Móviles grandes */
+@media (max-width: 480px) {
+  .comentario-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .comentario-user-info {
+    gap: 6px;
+    width: 100%;
+  }
+  
+  .fecha {
+    align-self: flex-end;
+    margin-top: -5px;
+  }
+  
+  .usuario {
+    font-size: 12px;
+  }
+  
+  .fecha {
+    font-size: 10px;
+  }
+  
+  .header-right {
+    gap: 8px;
+  }
+}
+
+/* Móviles muy pequeños */
+@media (max-width: 320px) {
+  .comentario-user-info {
+    gap: 4px;
+  }
+  
+  .comentario-user-details {
+    gap: 1px;
+  }
+  
+  .usuario-email {
+    font-size: 9px;
+  }
+}
+
+/* Header responsive con avatar */
+@media (max-width: 480px) {
+  .header {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+    padding: 10px;
+    min-height: auto;
+  }
+  
+  .header-left,
+  .header-right {
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .user-email {
+    order: -1; /* Mover el email arriba del avatar */
+  }
+}
+
+/* Mejoras para dispositivos táctiles */
+@media (hover: none) and (pointer: coarse) {
+  .user-avatar.comment-avatar,
+  .user-avatar.header-avatar {
+    /* Hacer los avatares un poco más grandes en dispositivos táctiles */
+    transform: scale(1.1);
+  }
+  
+  .user-avatar.comment-avatar {
+    margin-right: 10px;
+  }
+}

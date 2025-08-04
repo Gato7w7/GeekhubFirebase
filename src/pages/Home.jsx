@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 // import { auth } from '../services/firebase'; // REMOVIDO - no se usa
 import { useAuthContext } from '../context/AuthContext';
 import { useComments } from '../hooks/useComments';
+import { useUserProfiles } from '../hooks/useUserProfiles';
 import { userStatusService } from '../services/userStatusService';
 import CommentForm from '../components/CommentForm';
+import UserAvatar from '../components/UserAvatar';
 import '../styles/stylehome.css';
 
 const temasDisponibles = ['General', 'Juegos', 'Tecnologia', 'Off-topic'];
@@ -13,9 +15,12 @@ export default function Home() {
   const [temaSeleccionado, setTemaSeleccionado] = useState('General');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const { comments, loading, error, refetch } = useComments(temaSeleccionado);
+  const { getUserProfiles, getCachedProfile } = useUserProfiles();
   const { user, userRole, handleSignOut } = useAuthContext();
   const navigate = useNavigate();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [userProfiles, setUserProfiles] = useState(new Map());
+  const [loadingProfiles, setLoadingProfiles] = useState(false);
   const dropdownRef = useRef(null);
 
   // Referencias para limpiar listeners y heartbeat
@@ -67,6 +72,68 @@ export default function Home() {
     }
   }, [user?.uid]); // handleLogout ya no es necesario en las dependencias
 
+  // Cargar perfiles de usuario cuando cambien los comentarios
+  useEffect(() => {
+    const loadUserProfiles = async () => {
+      if (!comments || comments.length === 0) {
+        setUserProfiles(new Map());
+        return;
+      }
+
+      // Extraer emails únicos de los comentarios
+      const uniqueEmails = [...new Set(comments.map(comment => comment.usuario).filter(Boolean))];
+      
+      if (uniqueEmails.length === 0) return;
+
+      setLoadingProfiles(true);
+      
+      try {
+        // Obtener perfiles
+        const profiles = await getUserProfiles(uniqueEmails);
+        
+        // Convertir array a Map para acceso rápido
+        const profilesMap = new Map();
+        profiles.forEach(profile => {
+          if (profile && profile.email) {
+            profilesMap.set(profile.email, profile);
+          }
+        });
+        
+        setUserProfiles(profilesMap);
+      } catch (err) {
+        console.error('Error al cargar perfiles de usuario:', err);
+      } finally {
+        setLoadingProfiles(false);
+      }
+    };
+
+    loadUserProfiles();
+  }, [comments, getUserProfiles]);
+
+  // Obtener perfil de usuario para un comentario
+  const getUserProfileForComment = useCallback((email) => {
+    // Primero intentar del estado local
+    let profile = userProfiles.get(email);
+    
+    // Si no está, intentar del caché del hook
+    if (!profile) {
+      profile = getCachedProfile(email);
+    }
+    
+    // Si aún no está, crear un perfil básico
+    if (!profile) {
+      profile = {
+        email: email,
+        displayName: null,
+        profileImage: null,
+        role: 'user',
+        status: 'unknown'
+      };
+    }
+    
+    return profile;
+  }, [userProfiles, getCachedProfile]);
+
   const handleTemaChange = (tema) => {
     setTemaSeleccionado(tema);
     setDropdownOpen(false);
@@ -112,6 +179,17 @@ export default function Home() {
         </div>
         <div className="header-right">
           <span className="user-email">{user?.email || 'Sin email'}</span>
+          {/* Avatar del usuario actual en el header */}
+          {user?.email && (
+            <UserAvatar
+              profileImage={getCachedProfile(user.email)?.profileImage}
+              displayName={user?.displayName || getCachedProfile(user.email)?.displayName}
+              email={user.email}
+              size={32}
+              className="header-avatar"
+              showTooltip={true}
+            />
+          )}
           {userRole === 'admin' && (
             <button
               className="logout-btn"
@@ -137,7 +215,7 @@ export default function Home() {
       </header>
 
       <div className="main-container">
-        {/* Nuevo selector de temas desplegable */}
+        {/* Selector de temas desplegable */}
         <div className="tema-selector-container">
           <div className="tema-selector" ref={dropdownRef}>
             <button
@@ -190,14 +268,38 @@ export default function Home() {
               </div>
             ) : (
               <div className="lista-comentarios">
+                {loadingProfiles && (
+                  <div className="loading-profiles">
+                    <small>Cargando avatares...</small>
+                  </div>
+                )}
                 {comments.map((comment) => {
                   const texto = comment?.texto || '';
                   const usuario = comment?.usuario || 'Anónimo';
                   const fecha = comment?.fecha?.toDate?.()?.toLocaleString() || 'Fecha no disponible';
+                  const userProfile = getUserProfileForComment(usuario);
+                  
                   return (
                     <div key={comment.id} className="comentario">
                       <div className="comentario-header">
-                        <span className="usuario">{usuario}</span>
+                        <div className="comentario-user-info">
+                          <UserAvatar
+                            profileImage={userProfile.profileImage}
+                            displayName={userProfile.displayName}
+                            email={userProfile.email}
+                            size={36}
+                            className="comment-avatar"
+                            showTooltip={true}
+                          />
+                          <div className="comentario-user-details">
+                            <span className="usuario">
+                              {userProfile.displayName || usuario}
+                            </span>
+                            {userProfile.displayName && userProfile.email !== usuario && (
+                              <span className="usuario-email">({usuario})</span>
+                            )}
+                          </div>
+                        </div>
                         <span className="fecha"><em>{fecha}</em></span>
                       </div>
                       <div className="comentario-contenido">
